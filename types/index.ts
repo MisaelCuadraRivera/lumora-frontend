@@ -274,3 +274,167 @@ export interface CartItem {
   price: number
   addedAt: Date
 }
+
+// EVENTOS TYPES
+export interface Event {
+  id: string
+  organizerId: string
+  organizer: User
+  spaceId?: string
+  space?: Space
+  title: string
+  description: string
+  type: EventType
+  category: EventCategory
+  startDate: Date
+  endDate: Date
+  timezone: string
+  location: EventLocation
+  capacity: number
+  currentAttendees: number
+  price: number
+  currency: "USD" | "EUR" | "MXN"
+  isFree: boolean
+  status: EventStatus
+  visibility: "public" | "private" | "space_only"
+  tags: string[]
+  images: string[]
+  coverImage?: string
+  isLiveStream: boolean
+  streamUrl?: string
+  streamKey?: string
+  streamStatus: "offline" | "live" | "ended"
+  maxViewers?: number
+  currentViewers?: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type EventType = "workshop" | "conference" | "meetup" | "concert" | "exhibition" | "webinar" | "streaming" | "competition" | "hackathon" | "other"
+export type EventStatus = "draft" | "published" | "cancelled" | "completed" | "sold_out"
+
+export interface EventCategory {
+  id: string
+  name: string
+  icon: string
+  description: string
+  color: string
+}
+
+export interface EventLocation {
+  type: "physical" | "virtual" | "hybrid"
+  address?: string
+  city?: string
+  country?: string
+  coordinates?: {
+    lat: number
+    lng: number
+  }
+  virtualUrl?: string
+  platform?: "zoom" | "teams" | "discord" | "custom"
+  instructions?: string
+}
+
+export interface Ticket {
+  id: string
+  eventId: string
+  event: Event
+  name: string
+  description: string
+  price: number
+  currency: string
+  quantity: number
+  sold: number
+  available: number
+  benefits: string[]
+  isActive: boolean
+  saleStartDate: Date
+  saleEndDate: Date
+  maxPerUser: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface EventAttendee {
+  id: string
+  eventId: string
+  event: Event
+  userId: string
+  user: User
+  ticketId?: string
+  ticket?: Ticket
+  status: AttendeeStatus
+  rsvpDate: Date
+  checkInDate?: Date
+  checkOutDate?: Date
+  notes?: string
+  isPaid: boolean
+  paymentStatus: PaymentStatus
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type AttendeeStatus = "registered" | "confirmed" | "attended" | "cancelled" | "waitlist"
+
+export interface EventStream {
+  id: string
+  eventId: string
+  event: Event
+  title: string
+  description: string
+  streamUrl: string
+  streamKey: string
+  status: StreamStatus
+  startTime: Date
+  endTime?: Date
+  maxViewers: number
+  currentViewers: number
+  totalViewers: number
+  chatEnabled: boolean
+  recordingEnabled: boolean
+  quality: "720p" | "1080p" | "4k"
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type StreamStatus = "scheduled" | "live" | "ended" | "failed"
+
+export interface EventChat {
+  id: string
+  eventId: string
+  event: Event
+  userId: string
+  user: User
+  message: string
+  type: "text" | "reaction" | "question" | "moderation"
+  isModerated: boolean
+  isHighlighted: boolean
+  createdAt: Date
+}
+
+export interface EventAnalytics {
+  eventId: string
+  event: Event
+  totalRegistrations: number
+  totalAttendees: number
+  totalRevenue: number
+  averageRating: number
+  totalReviews: number
+  socialShares: number
+  websiteVisits: number
+  conversionRate: number
+  topReferrers: string[]
+  attendeeDemographics: {
+    ageGroups: Record<string, number>
+    locations: Record<string, number>
+    interests: Record<string, number>
+  }
+  engagementMetrics: {
+    averageWatchTime: number
+    chatMessages: number
+    questionsAsked: number
+    reactions: number
+  }
+  createdAt: Date
+  updatedAt: Date
+}

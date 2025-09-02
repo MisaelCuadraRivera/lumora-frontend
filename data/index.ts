@@ -19,6 +19,24 @@ import {
   getReviewsByProduct,
   getCartByUser
 } from "./marketplace"
+import { 
+  mockEvents,
+  eventCategories,
+  mockTickets,
+  mockEventAttendees,
+  mockEventStreams,
+  mockEventChat,
+  mockEventAnalytics,
+  getEventsBySpace,
+  getEventsByOrganizer,
+  getEventsByCategory,
+  getEventById,
+  getTicketsByEvent,
+  getAttendeesByEvent,
+  getUpcomingEvents,
+  getLiveEvents,
+  getEventAnalytics
+} from "./events"
 
 // Re-export all data
 export {
@@ -61,6 +79,23 @@ export {
   getOrdersByUser,
   getReviewsByProduct,
   getCartByUser,
+  // Events exports
+  mockEvents,
+  eventCategories,
+  mockTickets,
+  mockEventAttendees,
+  mockEventStreams,
+  mockEventChat,
+  mockEventAnalytics,
+  getEventsBySpace,
+  getEventsByOrganizer,
+  getEventsByCategory,
+  getEventById,
+  getTicketsByEvent,
+  getAttendeesByEvent,
+  getUpcomingEvents,
+  getLiveEvents,
+  getEventAnalytics,
 }
 
 // Utility functions for data manipulation

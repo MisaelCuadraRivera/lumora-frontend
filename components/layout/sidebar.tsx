@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { CreateSpaceModal } from "@/components/spaces/create-space-modal"
 import { useAuth } from "@/lib/auth"
 import { getJoinedSpaces, getUnreadNotifications } from "@/data"
-import { Home, User, Compass, Bell, Settings, Hash, Volume2, Plus, ChevronDown, MessageSquare, ShoppingCart } from "lucide-react"
+import { Home, User, Compass, Bell, Settings, Hash, Volume2, Plus, ChevronDown, MessageSquare, ShoppingCart, Calendar } from "lucide-react"
 
 const navigationItems = [
   {
@@ -33,6 +33,11 @@ const navigationItems = [
     name: "Marketplace",
     href: "/marketplace",
     icon: ShoppingCart,
+  },
+  {
+    name: "Eventos",
+    href: "/events",
+    icon: Calendar,
   },
   {
     name: "Mensajes",
