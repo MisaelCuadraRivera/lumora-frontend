@@ -5,6 +5,20 @@ import { mockMessages, messages, getMessagesByChannel } from "./messages"
 import { mockNotifications, notifications, getUnreadNotifications } from "./notifications"
 import { mockChannels, channels, getChannelsBySpace, getChannelById } from "./channels"
 import { mockReports, getReportsByStatus, getReportsByReporter, getReportsByModerator } from "./reports"
+import { 
+  mockProducts, 
+  productCategories, 
+  mockOrders, 
+  mockReviews, 
+  mockCart,
+  getProductsBySpace,
+  getProductsBySeller,
+  getProductsByCategory,
+  getProductById,
+  getOrdersByUser,
+  getReviewsByProduct,
+  getCartByUser
+} from "./marketplace"
 
 // Re-export all data
 export {
@@ -34,6 +48,19 @@ export {
   getReportsByStatus,
   getReportsByReporter,
   getReportsByModerator,
+  // Marketplace exports
+  mockProducts,
+  productCategories,
+  mockOrders,
+  mockReviews,
+  mockCart,
+  getProductsBySpace,
+  getProductsBySeller,
+  getProductsByCategory,
+  getProductById,
+  getOrdersByUser,
+  getReviewsByProduct,
+  getCartByUser,
 }
 
 // Utility functions for data manipulation

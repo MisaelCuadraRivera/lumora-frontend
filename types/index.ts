@@ -125,3 +125,152 @@ export interface Report {
   reviewedAt?: Date
   moderatorId?: string
 }
+
+// MARKETPLACE TYPES
+export interface Product {
+  id: string
+  sellerId: string
+  seller: User
+  spaceId?: string
+  space?: Space
+  title: string
+  description: string
+  price: number
+  currency: "USD" | "EUR" | "MXN"
+  category: ProductCategory
+  subcategory?: string
+  images: string[]
+  tags: string[]
+  condition: "new" | "like_new" | "good" | "fair" | "poor"
+  stock: number
+  isDigital: boolean
+  digitalDelivery?: boolean
+  shippingInfo?: ShippingInfo
+  status: "active" | "inactive" | "sold_out" | "draft"
+  views: number
+  likes: number
+  sales: number
+  rating: number
+  reviewCount: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface ProductCategory {
+  id: string
+  name: string
+  icon: string
+  description: string
+  subcategories?: string[]
+}
+
+export interface ShippingInfo {
+  weight?: number
+  dimensions?: {
+    length: number
+    width: number
+    height: number
+  }
+  shippingMethods: ShippingMethod[]
+  freeShipping?: boolean
+}
+
+export interface ShippingMethod {
+  id: string
+  name: string
+  price: number
+  estimatedDays: number
+  description?: string
+}
+
+export interface Order {
+  id: string
+  buyerId: string
+  buyer: User
+  sellerId: string
+  seller: User
+  productId: string
+  product: Product
+  quantity: number
+  totalPrice: number
+  currency: string
+  status: OrderStatus
+  paymentStatus: PaymentStatus
+  shippingAddress?: Address
+  billingAddress?: Address
+  paymentMethod?: PaymentMethod
+  trackingNumber?: string
+  notes?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type OrderStatus = "pending" | "confirmed" | "shipped" | "delivered" | "cancelled" | "refunded"
+export type PaymentStatus = "pending" | "paid" | "failed" | "refunded"
+
+export interface Address {
+  id: string
+  userId: string
+  type: "shipping" | "billing"
+  firstName: string
+  lastName: string
+  company?: string
+  address1: string
+  address2?: string
+  city: string
+  state: string
+  postalCode: string
+  country: string
+  phone?: string
+  isDefault: boolean
+}
+
+export interface PaymentMethod {
+  id: string
+  userId: string
+  type: "card" | "paypal" | "stripe"
+  last4?: string
+  brand?: string
+  isDefault: boolean
+  isActive: boolean
+}
+
+export interface Review {
+  id: string
+  productId: string
+  product: Product
+  buyerId: string
+  buyer: User
+  sellerId: string
+  seller: User
+  orderId: string
+  rating: number
+  title: string
+  comment: string
+  images?: string[]
+  isVerified: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Cart {
+  id: string
+  userId: string
+  items: CartItem[]
+  totalItems: number
+  subtotal: number
+  shipping: number
+  tax: number
+  total: number
+  currency: string
+  updatedAt: Date
+}
+
+export interface CartItem {
+  id: string
+  productId: string
+  product: Product
+  quantity: number
+  price: number
+  addedAt: Date
+}
