@@ -191,9 +191,9 @@ Este proyecto está bajo la licencia **MIT**. Eres libre de usar, modificar y di
 
 ## 📞 Contacto
 
-- **Website**: [lumora.com](https://lumora.com)
-- **Instagram**: [@lumora.social](https://instagram.com/lumora.social)
-- **Email**: hello@lumora.com
+- **Website**: [lumora.com](https://lumoraweb.site/)
+- **Instagram**: [@lumora.social](https://www.instagram.com/lumora_web/)
+- **Email**: misael.cuadra@lumoraweb.site
 
 ---
 
