@@ -524,3 +524,53 @@ export interface EventAnalytics {
   createdAt: Date
   updatedAt: Date
 }
+
+export type TaskPriority = "low" | "medium" | "high" | "urgent"
+export type TaskStatus = "backlog" | "todo" | "in_progress" | "review" | "done"
+
+export interface TaskAssignee {
+  id: string
+  username: string
+  avatar?: string
+}
+
+export interface TaskChecklistItem {
+  id: string
+  content: string
+  done: boolean
+}
+
+export interface TaskComment {
+  id: string
+  author: User
+  content: string
+  createdAt: Date
+}
+
+export interface Task {
+  id: string
+  spaceId: string
+  title: string
+  description?: string
+  status: TaskStatus
+  priority: TaskPriority
+  assignees: TaskAssignee[]
+  dueDate?: Date
+  tags: string[]
+  checklist: TaskChecklistItem[]
+  comments: TaskComment[]
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface TaskColumn {
+  id: TaskStatus
+  title: string
+  taskIds: string[]
+}
+
+export interface KanbanBoard {
+  spaceId: string
+  columns: TaskColumn[]
+  tasks: Record<string, Task>
+}
