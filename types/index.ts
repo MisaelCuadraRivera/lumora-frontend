@@ -99,11 +99,97 @@ export interface Message {
     name: string
     url: string
     type: string
+    size?: number
+    thumbnail?: string
   }
   reactions?: Reaction[]
   createdAt: Date
   editedAt?: Date
   replyTo?: string
+  isPinned?: boolean
+  isEdited?: boolean
+  mentions?: string[]
+  threadId?: string
+  threadCount?: number
+}
+
+export interface VoiceChannel {
+  id: string
+  spaceId: string
+  name: string
+  description?: string
+  connectedUsers: VoiceUser[]
+  maxParticipants: number
+  isLive: boolean
+  recordingEnabled: boolean
+  createdAt: Date
+}
+
+export interface VoiceUser {
+  id: string
+  name: string
+  avatar?: string
+  isMuted: boolean
+  isDeafened: boolean
+  isSpeaking: boolean
+  joinedAt: Date
+}
+
+export interface VideoCall {
+  id: string
+  spaceId: string
+  channelId: string
+  participants: VideoParticipant[]
+  isActive: boolean
+  isRecording: boolean
+  startedAt: Date
+  endedAt?: Date
+  maxParticipants: number
+}
+
+export interface VideoParticipant {
+  id: string
+  name: string
+  avatar?: string
+  isHost: boolean
+  isMuted: boolean
+  isVideoEnabled: boolean
+  isScreenSharing: boolean
+  joinedAt: Date
+}
+
+export interface ChatRole {
+  id: string
+  name: string
+  color: string
+  permissions: ChatPermission[]
+  priority: number
+}
+
+export interface ChatPermission {
+  id: string
+  name: string
+  description: string
+  category: "messages" | "channels" | "members" | "moderation"
+}
+
+export interface ChatNotification {
+  id: string
+  userId: string
+  channelId: string
+  type: "message" | "mention" | "reaction" | "voice" | "video"
+  title: string
+  body: string
+  data?: any
+  isRead: boolean
+  createdAt: Date
+}
+
+export interface ChatSearchResult {
+  messages: Message[]
+  channels: Channel[]
+  users: User[]
+  totalResults: number
 }
 
 export interface Reaction {

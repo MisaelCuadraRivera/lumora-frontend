@@ -3,16 +3,17 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Send, Plus, Smile, Gift } from "lucide-react"
+import { Send, Plus, Smile, Gift, Paperclip } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 
 interface ChatInputProps {
   channelName: string
   onSendMessage: (content: string) => void
+  onFileUpload?: () => void
 }
 
-export function ChatInput({ channelName, onSendMessage }: ChatInputProps) {
+export function ChatInput({ channelName, onSendMessage, onFileUpload }: ChatInputProps) {
   const [message, setMessage] = useState("")
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -49,6 +50,17 @@ export function ChatInput({ channelName, onSendMessage }: ChatInputProps) {
             />
 
             <div className="absolute right-2 bottom-2 flex items-center gap-1">
+              {onFileUpload && (
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 w-8 p-0 text-slate-400 hover:text-white"
+                  onClick={onFileUpload}
+                >
+                  <Paperclip className="w-4 h-4" />
+                </Button>
+              )}
               <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white">
                 <Smile className="w-4 h-4" />
               </Button>

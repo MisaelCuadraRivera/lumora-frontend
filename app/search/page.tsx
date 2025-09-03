@@ -1,481 +1,230 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { useState, useMemo } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { PostCard } from "@/components/posts/post-card"
-import { SpaceCard } from "@/components/spaces/space-card"
-import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
-import { SearchSkeleton, UserSkeleton, SpaceSkeleton, PostSkeleton } from "@/components/ui/skeleton-loaders"
-import { mockUsers, mockSpaces, mockPosts } from "@/data"
-import { Search, Users, Hash, FileText, Filter, ArrowLeft, Loader2 } from "lucide-react"
-import Link from "next/link"
+import { Card, CardHeader, CardContent } from "@/components/ui/card"
+import { Search, Filter } from "lucide-react"
+import { mockUsers, mockSpaces, mockPosts, mockProducts, mockEvents } from "@/data"
 
 export default function SearchPage() {
-  const searchParams = useSearchParams()
-  const query = searchParams.get("q") || ""
-  const [searchQuery, setSearchQuery] = useState(query)
-  const [activeTab, setActiveTab] = useState("all")
-  const [isInitialLoading, setIsInitialLoading] = useState(false)
+  const params = useSearchParams()
+  const router = useRouter()
+  const initialQ = params.get("q") || ""
+  const [query, setQuery] = useState(initialQ)
+  const [onlyVerified, setOnlyVerified] = useState(false)
+  const [withImages, setWithImages] = useState(false)
 
-  useEffect(() => {
-    setSearchQuery(query)
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) {
+      return {
+        users: [],
+        spaces: [],
+        posts: [],
+        products: [],
+        events: [],
+      }
+    }
+
+    const users = mockUsers.filter(u => 
+      u.username.toLowerCase().includes(q) || u.bio?.toLowerCase().includes(q)
+    )
+    const spaces = mockSpaces.filter(s => 
+      s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q)
+    )
+    const posts = mockPosts.filter(p => 
+      p.content.toLowerCase().includes(q) || p.tags.some(t => t.toLowerCase().includes(q))
+    )
+    const products = mockProducts.filter(p => 
+      p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)
+    )
+    const events = mockEvents.filter(e => 
+      e.title.toLowerCase().includes(q) || e.description.toLowerCase().includes(q)
+    )
+
+    return { users, spaces, posts, products, events }
   }, [query])
 
-  // Search results
-  const searchResults = {
-    users: mockUsers.filter(user => 
-      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.bio?.toLowerCase().includes(searchQuery.toLowerCase())
-    ),
-    spaces: mockSpaces.filter(space => 
-      space.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      space.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      space.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-    ),
-    posts: mockPosts.filter(post => 
-      post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      post.author.username.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  }
+  const total = filtered.users.length + filtered.spaces.length + filtered.posts.length + filtered.products.length + filtered.events.length
 
-  // Infinite scroll for each tab
-  const usersInfinite = useInfiniteScroll(searchResults.users, 6, {
-    enabled: activeTab === "users" || activeTab === "all",
-  })
-
-  const spacesInfinite = useInfiniteScroll(searchResults.spaces, 6, {
-    enabled: activeTab === "spaces" || activeTab === "all",
-  })
-
-  const postsInfinite = useInfiniteScroll(searchResults.posts, 5, {
-    enabled: activeTab === "posts" || activeTab === "all",
-  })
-
-  const totalResults = searchResults.users.length + searchResults.spaces.length + searchResults.posts.length
-
-  const handleSearch = async (e: React.FormEvent) => {
+  const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (searchQuery.trim()) {
-      setIsInitialLoading(true)
-      
-      // Simulate search delay
-      await new Promise(resolve => setTimeout(resolve, 800))
-      
-      const url = new URL(window.location.href)
-      url.searchParams.set("q", searchQuery)
-      window.history.pushState({}, "", url.toString())
-      setIsInitialLoading(false)
-    }
-  }
-
-  const handleJoinSpace = (spaceId: string) => {
-    console.log("Joining space:", spaceId)
-  }
-
-  const handleLeaveSpace = (spaceId: string) => {
-    console.log("Leaving space:", spaceId)
-  }
-
-  const handleLike = (postId: string) => {
-    console.log("Liked post:", postId)
-  }
-
-  const handleComment = (postId: string, content: string) => {
-    console.log("Comment on post:", postId, content)
-  }
-
-  const handleShare = (postId: string) => {
-    console.log("Shared post:", postId)
-  }
-
-  if (isInitialLoading) {
-    return <SearchSkeleton />
+    router.replace(`/search?q=${encodeURIComponent(query)}`)
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/feed">
-          <Button variant="ghost" size="sm" className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Volver
-          </Button>
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Búsqueda
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {query ? `Resultados para "${query}"` : "Busca usuarios, espacios y contenido"}
-          </p>
+    <div className="p-6 space-y-4">
+      <form onSubmit={onSubmit} className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar en Lumora..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="pl-9"
+          />
         </div>
+        <Button type="submit">Buscar</Button>
+      </form>
+
+      <div className="text-sm text-muted-foreground">
+        {query ? (
+          <span>
+            {total} resultados para "{query}"
+          </span>
+        ) : (
+          <span>Escribe para comenzar a buscar</span>
+        )}
       </div>
 
-      {/* Search Form */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-        <CardContent className="p-4">
-          <form onSubmit={handleSearch} className="flex gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar usuarios, espacios, posts..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList>
+          <TabsTrigger value="all">Todo</TabsTrigger>
+          <TabsTrigger value="users">Usuarios ({filtered.users.length})</TabsTrigger>
+          <TabsTrigger value="spaces">Espacios ({filtered.spaces.length})</TabsTrigger>
+          <TabsTrigger value="posts">Posts ({filtered.posts.length})</TabsTrigger>
+          <TabsTrigger value="market">Marketplace ({filtered.products.length})</TabsTrigger>
+          <TabsTrigger value="events">Eventos ({filtered.events.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all" className="space-y-6">
+          <SectionUsers users={filtered.users.slice(0, 5)} />
+          <SectionSpaces spaces={filtered.spaces.slice(0, 5)} />
+          <SectionPosts posts={filtered.posts.slice(0, 5)} />
+          <SectionProducts products={filtered.products.slice(0, 5)} />
+          <SectionEvents events={filtered.events.slice(0, 5)} />
+        </TabsContent>
+
+        <TabsContent value="users">
+          <SectionUsers users={filtered.users} />
+        </TabsContent>
+        <TabsContent value="spaces">
+          <SectionSpaces spaces={filtered.spaces} />
+        </TabsContent>
+        <TabsContent value="posts">
+          <SectionPosts posts={filtered.posts} />
+        </TabsContent>
+        <TabsContent value="market">
+          <SectionProducts products={filtered.products} />
+        </TabsContent>
+        <TabsContent value="events">
+          <SectionEvents events={filtered.events} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
+
+function SectionUsers({ users }: { users: any[] }) {
+  if (!users.length) return <Empty label="No hay usuarios" />
+  return (
+    <div className="grid gap-3">
+      {users.map((u) => (
+        <Card key={u.id} className="hover:bg-accent/30 transition-colors">
+          <CardHeader className="py-3">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={u.avatar} />
+                <AvatarFallback>{u.username?.charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium truncate">{u.username}</div>
+                <div className="text-xs text-muted-foreground truncate">{u.bio}</div>
+              </div>
+              <Badge variant="secondary">{u.facets?.[0]?.name || "Usuario"}</Badge>
             </div>
-            <Button type="submit">
-              <Search className="h-4 w-4 mr-2" />
-              Buscar
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          </CardHeader>
+        </Card>
+      ))}
+    </div>
+  )
+}
 
-      {/* Results Summary */}
-      {query && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            {totalResults} resultado{totalResults !== 1 ? 's' : ''} encontrado{totalResults !== 1 ? 's' : ''}
-          </p>
-          <Button variant="outline" size="sm" className="gap-2">
-            <Filter className="h-4 w-4" />
-            Filtros
-          </Button>
-        </div>
-      )}
-
-      {/* Results Tabs */}
-      {query && (
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="all" className="gap-2">
-              <Search className="h-4 w-4" />
-              Todo ({totalResults})
-            </TabsTrigger>
-            <TabsTrigger value="users" className="gap-2">
-              <Users className="h-4 w-4" />
-              Usuarios ({searchResults.users.length})
-            </TabsTrigger>
-            <TabsTrigger value="spaces" className="gap-2">
-              <Hash className="h-4 w-4" />
-              Espacios ({searchResults.spaces.length})
-            </TabsTrigger>
-            <TabsTrigger value="posts" className="gap-2">
-              <FileText className="h-4 w-4" />
-              Posts ({searchResults.posts.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="all" className="space-y-8">
-            {/* Users Section */}
-            {searchResults.users.length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Usuarios ({searchResults.users.length})
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {usersInfinite.displayedItems.map((user) => (
-                    <Card key={user.id} className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={user.avatar} />
-                            <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold truncate">{user.username}</h3>
-                            <p className="text-sm text-muted-foreground truncate">{user.bio}</p>
-                            <div className="flex items-center gap-2 mt-2">
-                              {user.facets.slice(0, 2).map((facet) => (
-                                <Badge key={facet.id} variant="secondary" className="text-xs">
-                                  {facet.name}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="mt-4 flex gap-2">
-                          <Button size="sm" variant="outline" className="flex-1">
-                            Ver Perfil
-                          </Button>
-                          <Button size="sm" className="flex-1">
-                            Seguir
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-                
-                {/* Users Infinite Scroll */}
-                {usersInfinite.hasMore && (
-                  <div ref={usersInfinite.loadingRef} className="flex justify-center py-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm">Cargando más usuarios...</span>
-                    </div>
-                  </div>
-                )}
-                
-                {usersInfinite.isLoading && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {Array.from({ length: 3 }).map((_, index) => (
-                      <UserSkeleton key={`loading-users-${index}`} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Spaces Section */}
-            {searchResults.spaces.length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <Hash className="h-5 w-5" />
-                  Espacios ({searchResults.spaces.length})
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {spacesInfinite.displayedItems.map((space) => (
-                    <SpaceCard 
-                      key={space.id} 
-                      space={space} 
-                      onJoin={handleJoinSpace} 
-                      onLeave={handleLeaveSpace} 
-                    />
-                  ))}
-                </div>
-                
-                {/* Spaces Infinite Scroll */}
-                {spacesInfinite.hasMore && (
-                  <div ref={spacesInfinite.loadingRef} className="flex justify-center py-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm">Cargando más espacios...</span>
-                    </div>
-                  </div>
-                )}
-                
-                {spacesInfinite.isLoading && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {Array.from({ length: 3 }).map((_, index) => (
-                      <SpaceSkeleton key={`loading-spaces-${index}`} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Posts Section */}
-            {searchResults.posts.length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Posts ({searchResults.posts.length})
-                </h2>
-                <div className="space-y-6">
-                  {postsInfinite.displayedItems.map((post) => (
-                    <PostCard
-                      key={post.id}
-                      post={post}
-                      onLike={handleLike}
-                      onComment={handleComment}
-                      onShare={handleShare}
-                    />
-                  ))}
-                </div>
-                
-                {/* Posts Infinite Scroll */}
-                {postsInfinite.hasMore && (
-                  <div ref={postsInfinite.loadingRef} className="flex justify-center py-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm">Cargando más posts...</span>
-                    </div>
-                  </div>
-                )}
-                
-                {postsInfinite.isLoading && (
-                  <div className="space-y-6">
-                    {Array.from({ length: 2 }).map((_, index) => (
-                      <PostSkeleton key={`loading-posts-${index}`} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="users" className="space-y-6">
-            {searchResults.users.length > 0 ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {usersInfinite.displayedItems.map((user) => (
-                    <Card key={user.id} className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={user.avatar} />
-                            <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold truncate">{user.username}</h3>
-                            <p className="text-sm text-muted-foreground truncate">{user.bio}</p>
-                            <div className="flex items-center gap-2 mt-2">
-                              {user.facets.slice(0, 2).map((facet) => (
-                                <Badge key={facet.id} variant="secondary" className="text-xs">
-                                  {facet.name}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="mt-4 flex gap-2">
-                          <Button size="sm" variant="outline" className="flex-1">
-                            Ver Perfil
-                          </Button>
-                          <Button size="sm" className="flex-1">
-                            Seguir
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-                
-                {/* Users Infinite Scroll */}
-                {usersInfinite.hasMore && (
-                  <div ref={usersInfinite.loadingRef} className="flex justify-center py-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm">Cargando más usuarios...</span>
-                    </div>
-                  </div>
-                )}
-                
-                {usersInfinite.isLoading && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {Array.from({ length: 3 }).map((_, index) => (
-                      <UserSkeleton key={`loading-users-${index}`} />
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No se encontraron usuarios</h3>
-                <p className="text-muted-foreground">Intenta con otros términos de búsqueda</p>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="spaces" className="space-y-6">
-            {searchResults.spaces.length > 0 ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {spacesInfinite.displayedItems.map((space) => (
-                    <SpaceCard 
-                      key={space.id} 
-                      space={space} 
-                      onJoin={handleJoinSpace} 
-                      onLeave={handleLeaveSpace} 
-                    />
-                  ))}
-                </div>
-                
-                {/* Spaces Infinite Scroll */}
-                {spacesInfinite.hasMore && (
-                  <div ref={spacesInfinite.loadingRef} className="flex justify-center py-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm">Cargando más espacios...</span>
-                    </div>
-                  </div>
-                )}
-                
-                {spacesInfinite.isLoading && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {Array.from({ length: 3 }).map((_, index) => (
-                      <SpaceSkeleton key={`loading-spaces-${index}`} />
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <Hash className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No se encontraron espacios</h3>
-                <p className="text-muted-foreground">Intenta con otros términos de búsqueda</p>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="posts" className="space-y-6">
-            {searchResults.posts.length > 0 ? (
-              <>
-                <div className="space-y-6">
-                  {postsInfinite.displayedItems.map((post) => (
-                    <PostCard
-                      key={post.id}
-                      post={post}
-                      onLike={handleLike}
-                      onComment={handleComment}
-                      onShare={handleShare}
-                    />
-                  ))}
-                </div>
-                
-                {/* Posts Infinite Scroll */}
-                {postsInfinite.hasMore && (
-                  <div ref={postsInfinite.loadingRef} className="flex justify-center py-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm">Cargando más posts...</span>
-                    </div>
-                  </div>
-                )}
-                
-                {postsInfinite.isLoading && (
-                  <div className="space-y-6">
-                    {Array.from({ length: 2 }).map((_, index) => (
-                      <PostSkeleton key={`loading-posts-${index}`} />
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No se encontraron posts</h3>
-                <p className="text-muted-foreground">Intenta con otros términos de búsqueda</p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      )}
-
-      {/* Empty State */}
-      {!query && (
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="p-12 text-center">
-            <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Busca en Lumora</h3>
-            <p className="text-muted-foreground">
-              Encuentra usuarios, espacios y contenido que te interese
-            </p>
+function SectionSpaces({ spaces }: { spaces: any[] }) {
+  if (!spaces.length) return <Empty label="No hay espacios" />
+  return (
+    <div className="grid gap-3 md:grid-cols-2">
+      {spaces.map((s) => (
+        <Card key={s.id} className="hover:bg-accent/30 transition-colors">
+          <CardHeader className="py-3">
+            <div className="font-medium">{s.name}</div>
+            <div className="text-xs text-muted-foreground">{s.description}</div>
+          </CardHeader>
+          <CardContent className="pt-0 pb-4">
+            <Badge variant="secondary">{s.memberCount} miembros</Badge>
           </CardContent>
         </Card>
-      )}
+      ))}
+    </div>
+  )
+}
+
+function SectionPosts({ posts }: { posts: any[] }) {
+  if (!posts.length) return <Empty label="No hay posts" />
+  return (
+    <div className="grid gap-3">
+      {posts.map((p) => (
+        <Card key={p.id} className="hover:bg-accent/30 transition-colors">
+          <CardHeader className="py-3">
+            <div className="font-medium line-clamp-2">{p.content}</div>
+          </CardHeader>
+          <CardContent className="pt-0 pb-4">
+            <div className="text-xs text-muted-foreground">por {p.author?.username}</div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
+function SectionProducts({ products }: { products: any[] }) {
+  if (!products.length) return <Empty label="No hay productos" />
+  return (
+    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      {products.map((p) => (
+        <Card key={p.id} className="hover:bg-accent/30 transition-colors">
+          <CardHeader className="py-3">
+            <div className="font-medium truncate">{p.title}</div>
+            <div className="text-xs text-muted-foreground line-clamp-2">{p.description}</div>
+          </CardHeader>
+          <CardContent className="pt-0 pb-4">
+            <Badge variant="secondary">${p.price} {p.currency}</Badge>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
+function SectionEvents({ events }: { events: any[] }) {
+  if (!events.length) return <Empty label="No hay eventos" />
+  return (
+    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      {events.map((e) => (
+        <Card key={e.id} className="hover:bg-accent/30 transition-colors">
+          <CardHeader className="py-3">
+            <div className="font-medium truncate">{e.title}</div>
+            <div className="text-xs text-muted-foreground line-clamp-2">{e.description}</div>
+          </CardHeader>
+          <CardContent className="pt-0 pb-4">
+            <Badge variant="secondary">{e.category?.name || "General"}</Badge>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
+function Empty({ label }: { label: string }) {
+  return (
+    <div className="text-center py-10 text-muted-foreground text-sm">
+      {label}
     </div>
   )
 }

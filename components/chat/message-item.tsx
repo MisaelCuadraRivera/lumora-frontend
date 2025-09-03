@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Heart, MessageSquare, MoreHorizontal } from "lucide-react"
+import { Heart, MessageSquare, MoreHorizontal, Pin, FileText, Image, Video, Music } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -12,14 +12,32 @@ interface MessageItemProps {
   message: Message
   onReact: (messageId: string, reaction: string) => void
   onReply: (messageId: string) => void
+  onPin?: (messageId: string) => void
 }
 
-export function MessageItem({ message, onReact, onReply }: MessageItemProps) {
+export function MessageItem({ message, onReact, onReply, onPin }: MessageItemProps) {
   const [isHovered, setIsHovered] = useState(false)
+
+  const getAttachmentIcon = (type: string) => {
+    if (type.startsWith('image/')) return <Image className="w-4 h-4" />
+    if (type.startsWith('video/')) return <Video className="w-4 h-4" />
+    if (type.startsWith('audio/')) return <Music className="w-4 h-4" />
+    return <FileText className="w-4 h-4" />
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
 
   return (
     <div
-      className="group px-4 py-2 hover:bg-slate-800/30 transition-colors"
+      className={`group px-4 py-2 hover:bg-slate-800/30 transition-colors ${
+        message.isPinned ? 'bg-yellow-500/10 border-l-2 border-yellow-500' : ''
+      }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -38,18 +56,45 @@ export function MessageItem({ message, onReact, onReply }: MessageItemProps) {
               </Badge>
             )}
             <span className="text-xs text-slate-400">{formatTimeAgo(message.createdAt)}</span>
+            {message.isPinned && (
+              <Badge variant="outline" className="text-xs text-yellow-500 border-yellow-500">
+                <Pin className="w-3 h-3 mr-1" />
+                Anclado
+              </Badge>
+            )}
+            {message.isEdited && (
+              <span className="text-xs text-slate-500">(editado)</span>
+            )}
           </div>
 
           <div className="text-slate-200 text-sm leading-relaxed">{message.content}</div>
 
           {message.attachment && (
             <div className="mt-2 max-w-md">
-              <img
-                src={message.attachment.url || "/placeholder.svg"}
-                alt={message.attachment.name}
-                className="rounded-lg max-h-64 object-cover"
-              />
-              <p className="text-xs text-slate-400 mt-1">{message.attachment.name}</p>
+              {message.attachment.type.startsWith('image/') ? (
+                <img
+                  src={message.attachment.url || "/placeholder.svg"}
+                  alt={message.attachment.name}
+                  className="rounded-lg max-h-64 object-cover"
+                />
+              ) : (
+                <div className="flex items-center gap-2 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                  {getAttachmentIcon(message.attachment.type)}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-white truncate">
+                      {message.attachment.name}
+                    </div>
+                    {message.attachment.size && (
+                      <div className="text-xs text-slate-400">
+                        {formatFileSize(message.attachment.size)}
+                      </div>
+                    )}
+                  </div>
+                  <Button variant="outline" size="sm" className="text-xs">
+                    Descargar
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
@@ -90,6 +135,16 @@ export function MessageItem({ message, onReact, onReply }: MessageItemProps) {
             >
               <MessageSquare className="w-4 h-4" />
             </Button>
+            {onPin && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-slate-400 hover:text-white"
+                onClick={() => onPin(message.id)}
+              >
+                <Pin className="w-4 h-4" />
+              </Button>
+            )}
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white">
               <MoreHorizontal className="w-4 h-4" />
             </Button>

@@ -89,7 +89,7 @@ export function Header() {
   )
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
+    <div className="flex h-14 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
       {/* Logo */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
@@ -102,151 +102,156 @@ export function Header() {
 
       {/* Enhanced Search */}
       <div className="flex-1 max-w-md mx-8" ref={searchRef}>
-        <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-          <PopoverTrigger asChild>
-            <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <form onSubmit={handleSearch} className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+            <PopoverTrigger asChild>
               <Input
                 type="search"
                 placeholder="Buscar usuarios, espacios, posts..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  if (!isSearchOpen) setIsSearchOpen(true)
+                }}
                 onFocus={() => setIsSearchOpen(true)}
+                autoComplete="off"
                 className="pl-10 bg-muted/50 border-muted-foreground/20 focus:border-primary/50"
               />
-              {searchQuery && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
-                  onClick={() => setSearchQuery("")}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              )}
-            </form>
-          </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-0" align="start">
-            <Command>
-              <CommandInput 
-                placeholder="Buscar en Lumora..." 
-                value={searchQuery}
-                onValueChange={setSearchQuery}
-              />
-              <CommandList>
-                {!searchQuery && (
-                  <CommandEmpty>
-                    <div className="p-4 text-center text-sm text-muted-foreground">
-                      Escribe para buscar usuarios, espacios y posts
-                    </div>
-                  </CommandEmpty>
-                )}
-                
-                {searchQuery && !hasResults && (
-                  <CommandEmpty>
-                    <div className="p-4 text-center text-sm text-muted-foreground">
-                      No se encontraron resultados para "{searchQuery}"
-                    </div>
-                  </CommandEmpty>
-                )}
+            </PopoverTrigger>
+            <PopoverContent className="w-[400px] p-0" align="start">
+              <Command>
+                <CommandInput 
+                  placeholder="Buscar en Lumora..." 
+                  value={searchQuery}
+                  onValueChange={setSearchQuery}
+                />
+                <CommandList>
+                  {!searchQuery && (
+                    <CommandEmpty>
+                      <div className="p-4 text-center text-sm text-muted-foreground">
+                        Escribe para buscar usuarios, espacios y posts
+                      </div>
+                    </CommandEmpty>
+                  )}
+                  
+                  {searchQuery && !hasResults && (
+                    <CommandEmpty>
+                      <div className="p-4 text-center text-sm text-muted-foreground">
+                        No se encontraron resultados para {`"${searchQuery}"`}
+                      </div>
+                    </CommandEmpty>
+                  )}
 
-                {searchResults && searchResults.users && searchResults.users.length > 0 && (
-                  <CommandGroup heading="Usuarios">
-                    {searchResults.users.map((user) => (
+                  {searchResults && searchResults.users && searchResults.users.length > 0 && (
+                    <CommandGroup heading="Usuarios">
+                      {searchResults.users.map((user) => (
+                        <CommandItem
+                          key={user.id}
+                          onSelect={() => {
+                            router.push(`/user/${user.username}`)
+                            setIsSearchOpen(false)
+                          }}
+                          className="flex items-center gap-3 p-3"
+                        >
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={user.avatar} />
+                            <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{user.username}</p>
+                            <p className="text-xs text-muted-foreground truncate">{user.bio}</p>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )}
+
+                  {searchResults && searchResults.spaces && searchResults.spaces.length > 0 && (
+                    <CommandGroup heading="Espacios">
+                      {searchResults.spaces.map((space) => (
+                        <CommandItem
+                          key={space.id}
+                          onSelect={() => {
+                            router.push(`/spaces/${space.id}`)
+                            setIsSearchOpen(false)
+                          }}
+                          className="flex items-center gap-3 p-3"
+                        >
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={space.image} />
+                            <AvatarFallback>{space.name.charAt(0).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{space.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{space.description}</p>
+                          </div>
+                          <Badge variant="secondary" className="text-xs">
+                            {space.memberCount} miembros
+                          </Badge>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )}
+
+                  {searchResults && searchResults.posts && searchResults.posts.length > 0 && (
+                    <CommandGroup heading="Posts">
+                      {searchResults.posts.map((post) => (
+                        <CommandItem
+                          key={post.id}
+                          onSelect={() => {
+                            router.push(`/post/${post.id}`)
+                            setIsSearchOpen(false)
+                          }}
+                          className="flex items-center gap-3 p-3"
+                        >
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <FileText className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">
+                              {post.content.substring(0, 50)}...
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              por {post.author.username}
+                            </p>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )}
+
+                  {hasResults && (
+                    <CommandGroup>
                       <CommandItem
-                        key={user.id}
                         onSelect={() => {
-                          router.push(`/user/${user.username}`)
+                          router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
                           setIsSearchOpen(false)
                         }}
                         className="flex items-center gap-3 p-3"
                       >
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.avatar} />
-                          <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{user.username}</p>
-                          <p className="text-xs text-muted-foreground truncate">{user.bio}</p>
-                        </div>
+                        <Search className="h-4 w-4" />
+                        <span>Ver todos los resultados para {`"${searchQuery}"`}</span>
                       </CommandItem>
-                    ))}
-                  </CommandGroup>
-                )}
+                    </CommandGroup>
+                  )}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
 
-                {searchResults && searchResults.spaces && searchResults.spaces.length > 0 && (
-                  <CommandGroup heading="Espacios">
-                    {searchResults.spaces.map((space) => (
-                      <CommandItem
-                        key={space.id}
-                        onSelect={() => {
-                          router.push(`/spaces/${space.id}`)
-                          setIsSearchOpen(false)
-                        }}
-                        className="flex items-center gap-3 p-3"
-                      >
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={space.image} />
-                          <AvatarFallback>{space.name.charAt(0).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{space.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">{space.description}</p>
-                        </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {space.memberCount} miembros
-                        </Badge>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                )}
-
-                {searchResults && searchResults.posts && searchResults.posts.length > 0 && (
-                  <CommandGroup heading="Posts">
-                    {searchResults.posts.map((post) => (
-                      <CommandItem
-                        key={post.id}
-                        onSelect={() => {
-                          router.push(`/post/${post.id}`)
-                          setIsSearchOpen(false)
-                        }}
-                        className="flex items-center gap-3 p-3"
-                      >
-                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <FileText className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">
-                            {post.content.substring(0, 50)}...
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            por {post.author.username}
-                          </p>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                )}
-
-                {hasResults && (
-                  <CommandGroup>
-                    <CommandItem
-                      onSelect={() => {
-                        router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
-                        setIsSearchOpen(false)
-                      }}
-                      className="flex items-center gap-3 p-3"
-                    >
-                      <Search className="h-4 w-4" />
-                      <span>Ver todos los resultados para "{searchQuery}"</span>
-                    </CommandItem>
-                  </CommandGroup>
-                )}
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+          {searchQuery && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              onClick={() => setSearchQuery("")}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </form>
       </div>
 
       {/* Actions */}
@@ -289,7 +294,7 @@ export function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push("/profile")}>
+            <DropdownMenuItem onClick={() => router.push("/profile")}> 
               <User className="mr-2 h-4 w-4" />
               <span>Mi Perfil</span>
             </DropdownMenuItem>
@@ -309,6 +314,6 @@ export function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </header>
+    </div>
   )
 }
