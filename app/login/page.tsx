@@ -46,7 +46,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-background to-primary/5 p-4">
       <div className="w-full max-w-md">
         <FadeIn className="text-center mb-8">
           <motion.div
