@@ -60,10 +60,9 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      whileHover={{ y: -2 }}
       layout
     >
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/60 transition-all duration-300 hover:shadow-lg hover:border-primary/20">
+      <Card className="border-border bg-card hover:bg-card/80 transition-all duration-300 hover:shadow-lg hover:border-primary/30">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <motion.div
@@ -82,14 +81,14 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
               </motion.div>
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="font-semibold text-sm">{post.author.username}</p>
+                  <p className="font-semibold text-sm text-foreground">{post.author.username}</p>
                   {post.facet && (
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
                     >
-                      <Badge variant="secondary" className="text-xs hover:scale-105 transition-transform">
+                      <Badge variant="secondary" className="text-xs hover:scale-105 transition-transform bg-primary/20 text-primary border-primary/30">
                         {post.facet.name}
                       </Badge>
                     </motion.div>
@@ -100,7 +99,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
                     >
-                      <Badge variant="outline" className="text-xs hover:scale-105 transition-transform">
+                      <Badge variant="outline" className="text-xs hover:scale-105 transition-transform border-border text-muted-foreground">
                         Cosmolectores
                       </Badge>
                     </motion.div>
@@ -110,7 +109,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
               </div>
             </motion.div>
             <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-              <Button variant="ghost" size="sm" className="hover:bg-primary/10 transition-colors">
+              <Button variant="ghost" size="sm" className="hover:bg-accent transition-colors text-muted-foreground hover:text-foreground">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </motion.div>
@@ -121,7 +120,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
           <div className="space-y-4">
             {/* Post Content */}
             <motion.p
-              className="text-sm leading-relaxed whitespace-pre-wrap"
+              className="text-sm leading-relaxed whitespace-pre-wrap text-foreground"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.4 }}
@@ -175,7 +174,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
             {post.links && post.links.length > 0 && (
               <div className="space-y-2">
                 {post.links.map((link, index) => (
-                  <Card key={index} className="border-border/30">
+                  <Card key={index} className="border-border bg-muted/50">
                     <CardContent className="p-3">
                       <a
                         href={link}
@@ -208,7 +207,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Badge variant="outline" className="text-xs hover:bg-primary/10 cursor-pointer transition-colors">
+                    <Badge variant="outline" className="text-xs hover:bg-primary/10 cursor-pointer transition-colors border-border text-muted-foreground hover:text-primary hover:border-primary/50">
                       #{tag}
                     </Badge>
                   </motion.div>
@@ -218,7 +217,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
 
             {/* Actions */}
             <motion.div
-              className="flex items-center justify-between pt-2 border-t border-border/50"
+              className="flex items-center justify-between pt-2 border-t border-border"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.3 }}
@@ -233,8 +232,8 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "gap-2 hover:text-red-500 transition-all duration-200 relative overflow-hidden",
-                      isLiked && "text-red-500"
+                      "gap-2 hover:text-red-500 hover:bg-red-500/10 transition-all duration-200 relative overflow-hidden text-muted-foreground",
+                      isLiked && "text-red-500 bg-red-500/10"
                     )}
                     onClick={handleLike}
                   >
@@ -279,7 +278,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="gap-2 hover:text-blue-500 transition-colors duration-200"
+                    className="gap-2 hover:text-blue-500 hover:bg-blue-500/10 transition-colors duration-200 text-muted-foreground"
                     onClick={() => setIsCommenting(!isCommenting)}
                   >
                     <MessageCircle className="h-4 w-4" />
@@ -291,7 +290,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="gap-2 hover:text-green-500 transition-colors duration-200"
+                    className="gap-2 hover:text-green-500 hover:bg-green-500/10 transition-colors duration-200 text-muted-foreground"
                     onClick={handleShare}
                   >
                     <Share className="h-4 w-4" />
@@ -311,7 +310,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Separator />
+                  <Separator className="bg-slate-700/50" />
                   {visibleComments.map((comment, index) => (
                     <motion.div
                       key={comment.id}
@@ -330,22 +329,22 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
                       </motion.div>
                       <div className="flex-1 space-y-1">
                         <motion.div
-                          className="bg-muted/50 rounded-lg px-3 py-2 hover:bg-muted/70 transition-colors"
+                          className="bg-slate-800/50 rounded-lg px-3 py-2 hover:bg-slate-800/70 transition-colors border border-slate-700/30"
                           whileHover={{ scale: 1.01 }}
                           transition={{ duration: 0.2 }}
                         >
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="font-semibold text-xs">{comment.author.username}</p>
-                            <p className="text-xs text-muted-foreground">{formatTimeAgo(comment.createdAt)}</p>
+                            <p className="font-semibold text-xs text-white">{comment.author.username}</p>
+                            <p className="text-xs text-slate-400">{formatTimeAgo(comment.createdAt)}</p>
                           </div>
-                          <p className="text-sm">{comment.content}</p>
+                          <p className="text-sm text-slate-200">{comment.content}</p>
                         </motion.div>
                         {comment.likes > 0 && (
                           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-6 px-2 text-xs hover:text-red-500 transition-colors"
+                              className="h-6 px-2 text-xs hover:text-red-500 hover:bg-red-500/10 transition-colors text-slate-400"
                             >
                               <Heart className="h-3 w-3 mr-1" />
                               {comment.likes}
@@ -361,7 +360,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                        className="text-xs text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
                         onClick={() => setShowAllComments(!showAllComments)}
                       >
                         {showAllComments ? (
@@ -392,7 +391,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Separator />
+                  <Separator className="bg-slate-700/50" />
                   <div className="flex gap-3">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src="/placeholder.svg" />
@@ -403,11 +402,11 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
                         placeholder="Escribe un comentario..."
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
-                        className="min-h-[60px] resize-none focus:ring-2 focus:ring-primary/20 transition-all"
+                        className="min-h-[60px] resize-none focus:ring-2 focus:ring-primary/20 transition-all bg-slate-800/50 border-slate-700/50 text-slate-200 placeholder:text-slate-500"
                       />
                       <div className="flex justify-end gap-2">
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Button variant="ghost" size="sm" onClick={() => setIsCommenting(false)}>
+                          <Button variant="ghost" size="sm" onClick={() => setIsCommenting(false)} className="text-slate-400 hover:text-slate-200">
                             Cancelar
                           </Button>
                         </motion.div>

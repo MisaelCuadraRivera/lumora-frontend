@@ -46,41 +46,49 @@ export function FacetCard({ facet, isOwner = false, onActivate, onEdit, onView }
   return (
     <Card
       className={cn(
-        "border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-200 hover:bg-card/60",
-        isActive && "ring-2 ring-primary/50",
+        "border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-200 hover:bg-card/80 hover:shadow-lg cursor-pointer",
+        isActive && "ring-2 ring-primary/50 shadow-md",
       )}
     >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          {/* Icono y información principal */}
+          <div className="flex items-center gap-4 flex-1">
             <div
               className={cn(
-                "w-12 h-12 rounded-full bg-gradient-to-r flex items-center justify-center",
+                "w-14 h-14 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg",
                 facetColors[facet.category],
               )}
             >
-              <span className="text-xl">{facetIcons[facet.category]}</span>
+              <span className="text-2xl">{facetIcons[facet.category]}</span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-lg">{facet.name}</h3>
-                {isActive && (
-                  <Badge variant="default" className="text-xs">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-semibold text-lg text-foreground truncate">{facet.name}</h3>
+                {isActive ? (
+                  <Badge variant="default" className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-primary/20">
                     Activo
                   </Badge>
-                )}
-                {!isActive && (
-                  <Badge variant="secondary" className="text-xs">
+                ) : (
+                  <Badge variant="secondary" className="text-xs px-2 py-0.5">
                     Alterno
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">{facet.description}</p>
+              <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                {facet.description}
+              </p>
             </div>
           </div>
+          
+          {/* Switch de activación */}
           {isOwner && (
-            <div className="flex items-center gap-2">
-              <Switch checked={isActive} onCheckedChange={handleToggleActive} />
+            <div className="flex items-center">
+              <Switch 
+                checked={isActive} 
+                onCheckedChange={handleToggleActive}
+                className="ml-2"
+              />
             </div>
           )}
         </div>
@@ -88,15 +96,39 @@ export function FacetCard({ facet, isOwner = false, onActivate, onEdit, onView }
 
       <CardContent className="pt-0">
         <div className="flex items-center justify-between">
-          <Badge variant="outline" className="text-xs capitalize">
-            {facet.category}
-          </Badge>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => onView?.(facet.id)}>
+          <div className="flex items-center gap-3">
+            <Badge 
+              variant="outline" 
+              className={cn(
+                "text-xs capitalize px-3 py-1 font-medium border-2",
+                isActive && "border-primary/30 text-primary bg-primary/5"
+              )}
+            >
+              {facet.category}
+            </Badge>
+            {isActive && (
+              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" title="Faceta activa" />
+            )}
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => onView?.(facet.id)}
+              className="hover:bg-primary/10 transition-colors"
+              title="Ver faceta"
+            >
               <Eye className="h-4 w-4" />
             </Button>
             {isOwner && (
-              <Button variant="ghost" size="sm" onClick={() => onEdit?.(facet.id)}>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => onEdit?.(facet.id)}
+                className="hover:bg-primary/10 transition-colors"
+                title="Editar faceta"
+              >
                 <Edit className="h-4 w-4" />
               </Button>
             )}

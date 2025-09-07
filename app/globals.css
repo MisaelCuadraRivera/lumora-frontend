@@ -4,79 +4,80 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Lumora Light Theme - Paleta de colores actualizada */
-  --background: #FDFDFD; /* Blanco */
-  --foreground: #0D0B22; /* Negro */
-  --card: #FDFDFD; /* Blanco */
-  --card-foreground: #0D0B22; /* Negro */
-  --popover: #FDFDFD; /* Blanco */
-  --popover-foreground: #0D0B22; /* Negro */
-  --primary: #6C4EFE; /* Purple Heart */
-  --primary-foreground: #FDFDFD; /* Blanco */
-  --secondary: #E4E0FE; /* Periwinkle */
-  --secondary-foreground: #302674; /* Royal Purple */
-  --muted: #E4E0FE; /* Periwinkle */
-  --muted-foreground: #302674; /* Royal Purple */
-  --accent: #E4E0FE; /* Periwinkle - fondo suave, igual que sidebar-accent en modo claro */
-  --accent-foreground: #302674; /* Royal Purple - igual que sidebar-accent-foreground en modo claro */
-  --highlight: #1DA0F9; /* Cyan para énfasis y focus */
-  --highlight-foreground: #FDFDFD; /* Blanco */
-  --destructive: #ef4444; /* Rojo para destructivo */
-  --destructive-foreground: #FDFDFD; /* Blanco */
-  --border: #E4E0FE; /* Periwinkle */
-  --input: #E4E0FE; /* Periwinkle */
-  --ring: #1DA0F9; /* Cyan para focus ring */
+  /* Lumora Light Theme - Paleta optimizada con neutrales */
+  --background: #FFFFFF; /* Blanco puro */
+  --foreground: #0F172A; /* Slate 900 */
+  --card: #F8FAFC; /* Slate 50 - neutro muy claro */
+  --card-foreground: #0F172A; /* Slate 900 */
+  --popover: #FFFFFF; /* Blanco puro */
+  --popover-foreground: #0F172A; /* Slate 900 */
+  --primary: #6C4EFE; /* Purple Heart - solo para branding */
+  --primary-foreground: #FFFFFF; /* Blanco */
+  --secondary: #F1F5F9; /* Slate 100 - neutro claro */
+  --secondary-foreground: #334155; /* Slate 700 */
+  --muted: #F1F5F9; /* Slate 100 - neutro */
+  --muted-foreground: #64748B; /* Slate 500 */
+  --accent: #F1F5F9; /* Slate 100 - neutro */
+  --accent-foreground: #334155; /* Slate 700 */
+  --highlight: #0EA5E9; /* Sky 500 para énfasis */
+  --highlight-foreground: #FFFFFF; /* Blanco */
+  --destructive: #EF4444; /* Red 500 */
+  --destructive-foreground: #FFFFFF; /* Blanco */
+  --border: #E2E8F0; /* Slate 200 - neutro */
+  --input: #F8FAFC; /* Slate 50 - neutro muy claro */
+  --ring: #6C4EFE; /* Purple Heart para focus */
   --chart-1: #6C4EFE; /* Purple Heart */
-  --chart-2: #302674; /* Royal Purple */
-  --chart-3: #E4E0FE; /* Periwinkle */
-  --chart-4: #0D0B22; /* Negro */
-  --chart-5: #FDFDFD; /* Blanco */
+  --chart-2: #0EA5E9; /* Sky 500 */
+  --chart-3: #10B981; /* Emerald 500 */
+  --chart-4: #F59E0B; /* Amber 500 */
+  --chart-5: #EF4444; /* Red 500 */
   --radius: 0.625rem;
-  --sidebar: #FDFDFD; /* Blanco */
-  --sidebar-foreground: #0D0B22; /* Negro */
+  --sidebar: #FFFFFF; /* Blanco */
+  --sidebar-foreground: #0F172A; /* Slate 900 */
   --sidebar-primary: #6C4EFE; /* Purple Heart */
-  --sidebar-primary-foreground: #FDFDFD; /* Blanco */
-  --sidebar-accent: #E4E0FE; /* Periwinkle */
-  --sidebar-accent-foreground: #302674; /* Royal Purple */
-  --sidebar-border: #E4E0FE; /* Periwinkle */
-  --sidebar-ring: #1DA0F9; /* Cyan para focus */
+  --sidebar-primary-foreground: #FFFFFF; /* Blanco */
+  --sidebar-accent: #F1F5F9; /* Slate 100 - neutro */
+  --sidebar-accent-foreground: #334155; /* Slate 700 */
+  --sidebar-border: #E2E8F0; /* Slate 200 - neutro */
+  --sidebar-ring: #6C4EFE; /* Purple Heart para focus */
 }
 
 .dark {
-  --background: #0D0B22; /* Negro/Muy oscuro */
-  --foreground: #FDFDFD; /* Blanco */
-  --card: #302674; /* Royal Purple */
-  --card-foreground: #FDFDFD; /* Blanco */
-  --popover: #302674; /* Royal Purple */
-  --popover-foreground: #FDFDFD; /* Blanco */
-  --primary: #6C4EFE; /* Purple Heart */
-  --primary-foreground: #FDFDFD; /* Blanco */
-  --secondary: #302674; /* Royal Purple */
-  --secondary-foreground: #E4E0FE; /* Periwinkle */
-  --muted: #302674; /* Royal Purple */
-  --muted-foreground: #E4E0FE; /* Periwinkle */
-  --accent: #302674; /* Royal Purple - igual que sidebar-accent en modo oscuro */
-  --accent-foreground: #E4E0FE; /* Periwinkle - igual que sidebar-accent-foreground en modo oscuro */
-  --highlight: #1DA0F9; /* Cyan para énfasis y focus */
-  --highlight-foreground: #0D0B22; /* Negro para mejor contraste */
-  --destructive: #ef4444; /* Rojo para destructivo */
-  --destructive-foreground: #FDFDFD; /* Blanco */
-  --border: #302674; /* Royal Purple */
-  --input: #302674; /* Royal Purple */
-  --ring: #1DA0F9; /* Cyan para focus ring */
+  /* Lumora Dark Theme - Paleta optimizada con neutrales */
+  --background: #0F172A; /* Slate 900 */
+  --foreground: #F8FAFC; /* Slate 50 */
+  --card: #1E293B; /* Slate 800 - neutro oscuro */
+  --card-foreground: #F8FAFC; /* Slate 50 */
+  --popover: #1E293B; /* Slate 800 */
+  --popover-foreground: #F8FAFC; /* Slate 50 */
+  --primary: #6C4EFE; /* Purple Heart - mantener para branding */
+  --primary-foreground: #FFFFFF; /* Blanco */
+  --secondary: #334155; /* Slate 700 - neutro */
+  --secondary-foreground: #E2E8F0; /* Slate 200 */
+  --muted: #334155; /* Slate 700 - neutro */
+  --muted-foreground: #94A3B8; /* Slate 400 */
+  --accent: #334155; /* Slate 700 - neutro */
+  --accent-foreground: #E2E8F0; /* Slate 200 */
+  --highlight: #0EA5E9; /* Sky 500 para énfasis */
+  --highlight-foreground: #FFFFFF; /* Blanco */
+  --destructive: #EF4444; /* Red 500 */
+  --destructive-foreground: #FFFFFF; /* Blanco */
+  --border: #334155; /* Slate 700 - neutro */
+  --input: #1E293B; /* Slate 800 - neutro oscuro */
+  --ring: #6C4EFE; /* Purple Heart para focus */
   --chart-1: #6C4EFE; /* Purple Heart */
-  --chart-2: #E4E0FE; /* Periwinkle */
-  --chart-3: #302674; /* Royal Purple */
-  --chart-4: #FDFDFD; /* Blanco */
-  --chart-5: #0D0B22; /* Negro */
-  --sidebar: #0D0B22; /* Negro */
-  --sidebar-foreground: #FDFDFD; /* Blanco */
+  --chart-2: #0EA5E9; /* Sky 500 */
+  --chart-3: #10B981; /* Emerald 500 */
+  --chart-4: #F59E0B; /* Amber 500 */
+  --chart-5: #EF4444; /* Red 500 */
+  --sidebar: #0F172A; /* Slate 900 */
+  --sidebar-foreground: #F8FAFC; /* Slate 50 */
   --sidebar-primary: #6C4EFE; /* Purple Heart */
-  --sidebar-primary-foreground: #FDFDFD; /* Blanco */
-  --sidebar-accent: #302674; /* Royal Purple */
-  --sidebar-accent-foreground: #E4E0FE; /* Periwinkle */
-  --sidebar-border: #302674; /* Royal Purple */
-  --sidebar-ring: #1DA0F9; /* Cyan para focus */
+  --sidebar-primary-foreground: #FFFFFF; /* Blanco */
+  --sidebar-accent: #334155; /* Slate 700 - neutro */
+  --sidebar-accent-foreground: #E2E8F0; /* Slate 200 */
+  --sidebar-border: #334155; /* Slate 700 - neutro */
+  --sidebar-ring: #6C4EFE; /* Purple Heart para focus */
 }
 
 @theme inline {
@@ -348,4 +349,29 @@
     filter: blur(2px);
     animation: float 10s ease-in-out infinite;
   }
+}
+
+/* Utilidades adicionales */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
 }

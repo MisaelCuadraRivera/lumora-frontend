@@ -32,7 +32,7 @@ export default function ExplorePage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <div className="w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-8">
       <div className="text-center space-y-4">
         <h1 className="text-3xl font-bold">Explorar Espacios</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -86,7 +86,7 @@ export default function ExplorePage() {
         </TabsList>
 
         <TabsContent value="popular" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-6">
             {filteredSpaces
               .sort((a, b) => b.memberCount - a.memberCount)
               .map((space) => (
@@ -96,7 +96,7 @@ export default function ExplorePage() {
         </TabsContent>
 
         <TabsContent value="active" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-6">
             {filteredSpaces
               .sort((a, b) => b.activeMembers - a.activeMembers)
               .map((space) => (
@@ -106,7 +106,7 @@ export default function ExplorePage() {
         </TabsContent>
 
         <TabsContent value="new" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-6">
             {filteredSpaces
               .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
               .map((space) => (

@@ -12,6 +12,7 @@ import { CreateSpaceModal } from "@/components/spaces/create-space-modal"
 import { useAuth } from "@/lib/auth"
 import { getJoinedSpaces, getUnreadNotifications } from "@/data"
 import { Home, User, Compass, Settings, Hash, Volume2, Plus, ChevronDown, MessageSquare, ShoppingCart, Calendar } from "lucide-react"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 const navigationItems = [
   {
@@ -217,6 +218,13 @@ export function Sidebar() {
           </Button>
         </div>
       </ScrollArea>
+
+      {/* Footer with Theme Toggle */}
+      <div className="p-2 border-t border-sidebar-border bg-sidebar">
+        <div className="space-y-1">
+          <ThemeToggle />
+        </div>
+      </div>
 
       {/* Create Space Modal */}
       <CreateSpaceModal 
