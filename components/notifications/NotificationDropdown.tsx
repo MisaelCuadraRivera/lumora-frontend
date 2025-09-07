@@ -38,7 +38,7 @@ export function NotificationDropdown() {
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-9 w-9">
+        <Button variant="ghost" size="icon" className="relative h-9 w-9 cursor-pointer hover:bg-accent transition-colors">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <div className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
@@ -51,7 +51,7 @@ export function NotificationDropdown() {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" onClick={handleMarkAllAsRead} disabled={unreadCount === 0} className="h-8 w-8">
+                <Button variant="ghost" size="icon" onClick={handleMarkAllAsRead} disabled={unreadCount === 0} className="h-8 w-8 cursor-pointer hover:bg-accent transition-colors disabled:cursor-not-allowed">
                   <CheckCheck className="h-4 w-4" />
                   <span className="sr-only">Marcar todas como leídas</span>
                 </Button>
@@ -77,7 +77,7 @@ export function NotificationDropdown() {
         </ScrollArea>
         <div className="p-2 border-t bg-muted/50 text-center">
           <Link href="/notifications">
-            <Button variant="link" className="w-full text-sm">
+            <Button variant="link" className="w-full text-sm cursor-pointer hover:bg-accent/50 transition-colors">
               Ver todas las notificaciones
             </Button>
           </Link>

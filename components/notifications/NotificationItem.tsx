@@ -12,7 +12,12 @@ export function NotificationItem({ notification }: { notification: Notification 
   return (
     <Link
       href={notification.actionUrl || '#'}
-      className="block p-3 transition-colors hover:bg-accent"
+      className={cn(
+        "block p-3 cursor-pointer transition-all duration-200 border-l-4",
+        notification.read 
+          ? "hover:bg-accent/60 border-transparent hover:border-accent/50" 
+          : "bg-accent/20 hover:bg-accent/60 border-primary/30 hover:border-primary/60"
+      )}
     >
       <div className="flex items-start gap-4">
         {notification.actor?.avatar ? (
