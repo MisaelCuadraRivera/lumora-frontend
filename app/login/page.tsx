@@ -71,7 +71,7 @@ export default function LoginPage() {
               </div>
               <h1 className="text-2xl font-bold text-white">Lumora</h1>
             </div>
-            <p className="text-white/70 text-sm">Tu universo digital te espera.</p>
+            <p className="text-white/70">Tu universo digital te espera.</p>
           </motion.div>
 
           {/* Form Container */}
