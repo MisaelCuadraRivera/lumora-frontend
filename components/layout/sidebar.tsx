@@ -211,7 +211,7 @@ export function Sidebar() {
         <div className="p-2 border-t border-sidebar-border">
           <Button
             onClick={() => setShowCreateModal(true)}
-            className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             <Plus className="h-4 w-4 mr-2" />
             Crear Espacio

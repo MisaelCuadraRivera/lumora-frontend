@@ -173,31 +173,29 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
           )}
 
           {/* Actions Bar */}
-          <div className="flex items-center justify-between w-full -ml-2">
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "gap-2 hover:text-red-500 hover:bg-red-500/10 transition-colors text-muted-foreground rounded-full px-3 py-1.5 h-auto",
-                  isLiked && "text-red-500 bg-red-500/5"
-                )}
-                onClick={handleLike}
-              >
-                <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
-                <span className="text-sm tabular-nums">{likesCount}</span>
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-2 hover:text-blue-500 hover:bg-blue-500/10 transition-colors text-muted-foreground rounded-full px-3 py-1.5 h-auto"
-                onClick={() => setIsCommenting(!isCommenting)}
-              >
-                <MessageCircle className="h-4 w-4" />
-                <span className="text-sm tabular-nums">{post.comments.length}</span>
-              </Button>
-            </div>
+          <div className="flex items-center justify-between max-w-md -ml-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "gap-2 hover:text-red-500 hover:bg-red-500/10 transition-colors text-muted-foreground rounded-full px-3 py-1.5 h-auto",
+                isLiked && "text-red-500 bg-red-500/5"
+              )}
+              onClick={handleLike}
+            >
+              <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
+              <span className="text-sm tabular-nums">{likesCount}</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2 hover:text-blue-500 hover:bg-blue-500/10 transition-colors text-muted-foreground rounded-full px-3 py-1.5 h-auto"
+              onClick={() => setIsCommenting(!isCommenting)}
+            >
+              <MessageCircle className="h-4 w-4" />
+              <span className="text-sm tabular-nums">{post.comments.length}</span>
+            </Button>
             
             <Button
               variant="ghost"

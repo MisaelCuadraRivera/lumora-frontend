@@ -94,7 +94,7 @@ export function Header() {
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <LumoraLogo width={32} height={32} className="drop-shadow-sm" />
-          <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h1 className="text-xl font-bold text-foreground">
             Lumora
           </h1>
         </div>

@@ -375,3 +375,8 @@
   -webkit-line-clamp: 3;
   line-clamp: 3;
 }
+
+/* Twitter-style post spacing */
+.ml-13 {
+  margin-left: 3.25rem; /* 52px - Avatar width (40px) + gap (12px) */
+}
