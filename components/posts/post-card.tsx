@@ -53,7 +53,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
     onShare?.(post.id)
   }
 
-  const visibleComments = showAllComments ? post.comments : post.comments.slice(0, 2)
+  const visibleComments = showAllComments ? (post.comments || []) : (post.comments || []).slice(0, 2)
 
   return (
     <motion.div
@@ -142,13 +142,13 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3, duration: 0.4 }}
               >
-                {post.images.slice(0, 4).map((image, index) => (
+                {(post.images || []).slice(0, 4).map((image, index) => (
                   <motion.div
                     key={index}
                     className={cn(
                       "relative bg-muted overflow-hidden rounded-md cursor-pointer",
-                      post.images!.length === 1 ? "aspect-video" : "aspect-square",
-                      post.images!.length === 3 && index === 0 && "row-span-2",
+                      (post.images || []).length === 1 ? "aspect-video" : "aspect-square",
+                      (post.images || []).length === 3 && index === 0 && "row-span-2",
                     )}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -161,9 +161,9 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
                       alt=""
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
                     />
-                    {post.images!.length > 4 && index === 3 && (
+                    {(post.images || []).length > 4 && index === 3 && (
                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                        <span className="text-white font-semibold">+{post.images!.length - 4}</span>
+                        <span className="text-white font-semibold">+{(post.images || []).length - 4}</span>
                       </div>
                     )}
                   </motion.div>
@@ -174,7 +174,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
             {/* Links */}
             {post.links && post.links.length > 0 && (
               <div className="space-y-2">
-                {post.links.map((link, index) => (
+                {(post.links || []).map((link, index) => (
                   <Card key={index} className="border-border/30">
                     <CardContent className="p-3">
                       <a
@@ -192,14 +192,14 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
             )}
 
             {/* Tags */}
-            {post.tags.length > 0 && (
+            {(post.tags || []).length > 0 && (
               <motion.div
                 className="flex flex-wrap gap-1"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.3 }}
               >
-                {post.tags.map((tag, index) => (
+                {(post.tags || []).map((tag, index) => (
                   <motion.div
                     key={tag}
                     initial={{ opacity: 0, scale: 0 }}
@@ -283,7 +283,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
                     onClick={() => setIsCommenting(!isCommenting)}
                   >
                     <MessageCircle className="h-4 w-4" />
-                    <span className="text-xs">{post.comments.length}</span>
+                    <span className="text-xs">{(post.comments || []).length}</span>
                   </Button>
                 </motion.div>
                 
@@ -303,7 +303,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
 
             {/* Comments Section */}
             <AnimatePresence>
-              {showComments && post.comments.length > 0 && (
+              {showComments && (post.comments || []).length > 0 && (
                 <motion.div
                   className="space-y-3 pt-2"
                   initial={{ opacity: 0, height: 0 }}
@@ -356,7 +356,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
                     </motion.div>
                   ))}
 
-                  {post.comments.length > 2 && (
+                  {(post.comments || []).length > 2 && (
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                       <Button
                         variant="ghost"
@@ -372,7 +372,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
                         ) : (
                           <>
                             <ChevronDown className="h-3 w-3 mr-1" />
-                            Ver {post.comments.length - 2} comentarios más
+                            Ver {(post.comments || []).length - 2} comentarios más
                           </>
                         )}
                       </Button>

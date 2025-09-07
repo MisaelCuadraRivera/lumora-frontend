@@ -32,18 +32,12 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/lib/auth"
 import { useToast } from "@/hooks/use-toast"
-import { 
-  mockEvents, 
-  eventCategories, 
-  getEventsBySpace,
-  getEventsByCategory,
-  getUpcomingEvents,
-  getLiveEvents
-} from "@/data"
+import { useEvents } from "@/hooks/useEvents"
 import { EventCard } from "./event-card"
 import { EventFilters } from "./event-filters"
 import { EventCalendar } from "./event-calendar"
 import { LiveEventsBanner } from "./live-events-banner"
+import { CreateEventModal } from "./create-event-modal"
 
 interface EventCatalogProps {
   spaceId?: string
@@ -54,8 +48,8 @@ interface EventCatalogProps {
 export function EventCatalog({ spaceId, organizerId, categoryId }: EventCatalogProps) {
   const { user } = useAuth()
   const { toast } = useToast()
-  const [events, setEvents] = useState(mockEvents)
-  const [filteredEvents, setFilteredEvents] = useState(mockEvents)
+  const { events, loading, error, loadEvents, getSpaceEvents, attendEvent, cancelAttendance } = useEvents()
+  const [filteredEvents, setFilteredEvents] = useState(events)
   const [viewMode, setViewMode] = useState<"grid" | "list" | "calendar">("grid")
   const [showFilters, setShowFilters] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -71,21 +65,30 @@ export function EventCatalog({ spaceId, organizerId, categoryId }: EventCatalogP
     tags: [] as string[]
   })
 
+  // Categorías de eventos del backend
+  const eventCategories = [
+    { id: "conference", name: "Conferencia", icon: "🎤" },
+    { id: "workshop", name: "Taller", icon: "🔧" },
+    { id: "meetup", name: "Meetup", icon: "🤝" },
+    { id: "concert", name: "Concierto", icon: "🎵" },
+    { id: "exhibition", name: "Exposición", icon: "🖼️" },
+    { id: "sports", name: "Deportes", icon: "⚽" },
+    { id: "other", name: "Otro", icon: "📅" }
+  ]
+
   // Load events based on props
   useEffect(() => {
-    let filtered = mockEvents
-
     if (spaceId) {
-      filtered = getEventsBySpace(spaceId)
-    } else if (organizerId) {
-      filtered = mockEvents.filter(e => e.organizerId === organizerId)
-    } else if (categoryId) {
-      filtered = getEventsByCategory(categoryId)
+      getSpaceEvents(spaceId)
+    } else {
+      loadEvents()
     }
+  }, [spaceId, loadEvents, getSpaceEvents])
 
-    setEvents(filtered)
-    setFilteredEvents(filtered)
-  }, [spaceId, organizerId, categoryId])
+  // Update filtered events when events change
+  useEffect(() => {
+    setFilteredEvents(events)
+  }, [events])
 
   // Apply filters
   useEffect(() => {
@@ -102,74 +105,180 @@ export function EventCatalog({ spaceId, organizerId, categoryId }: EventCatalogP
 
     // Category filter
     if (selectedCategory) {
-      filtered = filtered.filter(event => event.category.id === selectedCategory)
+      filtered = filtered.filter(event => event.category === selectedCategory)
     }
 
     // Date filter
     if (selectedDate) {
       filtered = filtered.filter(event => {
-        const eventDate = new Date(event.startDate)
-        return eventDate.toDateString() === selectedDate.toDateString()
+        try {
+          const eventDate = new Date(event.startDate)
+          return !isNaN(eventDate.getTime()) && eventDate.toDateString() === selectedDate.toDateString()
+        } catch (error) {
+          console.error('Error filtering by date:', error, 'Event start date:', event.startDate)
+          return false
+        }
       })
     }
 
     // Free only filter
     if (filters.freeOnly) {
-      filtered = filtered.filter(event => event.isFree)
+      filtered = filtered.filter(event => event.price === 0)
     }
 
     // Live stream filter
     if (filters.liveStream) {
-      filtered = filtered.filter(event => event.isLiveStream)
+      filtered = filtered.filter(event => event.streaming?.enabled)
     }
 
     // Virtual only filter
     if (filters.virtualOnly) {
-      filtered = filtered.filter(event => event.location.type === "virtual")
+      filtered = filtered.filter(event => event.isOnline)
     }
 
     // Physical only filter
     if (filters.physicalOnly) {
-      filtered = filtered.filter(event => event.location.type === "physical")
+      filtered = filtered.filter(event => !event.isOnline)
     }
 
     // Upcoming only filter
     if (filters.upcomingOnly) {
-      filtered = filtered.filter(event => event.startDate > new Date())
+      filtered = filtered.filter(event => {
+        try {
+          const eventDate = new Date(event.startDate)
+          return !isNaN(eventDate.getTime()) && eventDate > new Date()
+        } catch (error) {
+          console.error('Error filtering upcoming events:', error, 'Event start date:', event.startDate)
+          return false
+        }
+      })
     }
 
     setFilteredEvents(filtered)
   }, [events, searchQuery, selectedCategory, selectedDate, filters])
 
-  const handleRSVP = (eventId: string) => {
-    // Aquí iría la lógica para RSVP
-    toast({
-      title: "RSVP enviado",
-      description: "Te has registrado para el evento",
-    })
+  const handleRSVP = async (eventId: string) => {
+    try {
+      const result = await attendEvent(eventId)
+      if (result.success) {
+        toast({
+          title: "RSVP enviado",
+          description: "Te has registrado para el evento",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || "Error al registrarse en el evento",
+          variant: "destructive"
+        })
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Error al registrarse en el evento",
+        variant: "destructive"
+      })
+    }
   }
 
-  const handleLike = (eventId: string) => {
-    // Aquí iría la lógica para like
-    toast({
-      title: "Evento agregado a favoritos",
-      description: "El evento se agregó a tu lista de favoritos",
-    })
+  const handleCancelRSVP = async (eventId: string) => {
+    try {
+      const result = await cancelAttendance(eventId)
+      if (result.success) {
+        toast({
+          title: "Asistencia cancelada",
+          description: "Has cancelado tu asistencia al evento",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || "Error al cancelar asistencia",
+          variant: "destructive"
+        })
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Error al cancelar asistencia",
+        variant: "destructive"
+      })
+    }
   }
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('es-MX', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date)
+  const formatDate = (date: Date | string) => {
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date
+      
+      if (isNaN(dateObj.getTime())) {
+        return 'Fecha inválida'
+      }
+      
+      return new Intl.DateTimeFormat('es-MX', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(dateObj)
+    } catch (error) {
+      console.error('Error formatting date:', error, 'Date value:', date)
+      return 'Fecha inválida'
+    }
   }
 
-  const liveEvents = getLiveEvents()
-  const upcomingEvents = getUpcomingEvents()
+  // Filtrar eventos en vivo y próximos
+  const liveEvents = events.filter(event => {
+    try {
+      const now = new Date()
+      const startDate = new Date(event.startDate)
+      const endDate = new Date(event.endDate)
+      return !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && 
+             startDate <= now && endDate >= now
+    } catch (error) {
+      console.error('Error filtering live events:', error, 'Event dates:', event.startDate, event.endDate)
+      return false
+    }
+  })
+
+  const upcomingEvents = events.filter(event => {
+    try {
+      const now = new Date()
+      const startDate = new Date(event.startDate)
+      return !isNaN(startDate.getTime()) && startDate > now
+    } catch (error) {
+      console.error('Error filtering upcoming events:', error, 'Event start date:', event.startDate)
+      return false
+    }
+  })
+
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Cargando eventos...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+            <span className="text-red-500 text-2xl">⚠️</span>
+          </div>
+          <h3 className="text-lg font-semibold mb-2">Error cargando eventos</h3>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={() => loadEvents()}>
+            Reintentar
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="h-full space-y-6">
@@ -232,10 +341,12 @@ export function EventCatalog({ spaceId, organizerId, categoryId }: EventCatalogP
             </Button>
           </div>
 
-          <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90">
-            <Plus className="w-4 h-4 mr-2" />
-            Crear Evento
-          </Button>
+          <CreateEventModal spaceId={spaceId}>
+            <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90">
+              <Plus className="w-4 h-4 mr-2" />
+              Crear Evento
+            </Button>
+          </CreateEventModal>
         </div>
       </div>
 
@@ -317,7 +428,7 @@ export function EventCatalog({ spaceId, organizerId, categoryId }: EventCatalogP
                   event={event}
                   viewMode={viewMode}
                   onRSVP={handleRSVP}
-                  onLike={handleLike}
+                  onCancelRSVP={handleCancelRSVP}
                 />
               </motion.div>
             ))}

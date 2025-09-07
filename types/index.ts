@@ -2,11 +2,15 @@ export interface User {
   id: string
   username: string
   email: string
+  firstName?: string
+  lastName?: string
   avatar?: string
   bio?: string
   createdAt: Date
   facets: Facet[]
   isOnline?: boolean
+  isVerified?: boolean
+  preferences?: Record<string, any>
   followers: string[]
   following: string[]
   blockedUsers: string[]
@@ -69,8 +73,11 @@ export interface Space {
   category: string
   tags: string[]
   isJoined: boolean
+  isPublic?: boolean
   createdAt: Date
   channels?: Channel[]
+  ownerId?: string
+  owner?: User
 }
 
 export interface Channel {
@@ -364,8 +371,8 @@ export interface CartItem {
 // EVENTOS TYPES
 export interface Event {
   id: string
-  organizerId: string
-  organizer: User
+  userId: string
+  creator: User
   spaceId?: string
   space?: Space
   title: string
@@ -376,36 +383,30 @@ export interface Event {
   endDate: Date
   timezone: string
   location: EventLocation
-  capacity: number
+  onlineUrl?: string
+  image?: string
+  banner?: string
+  isPublic: boolean
+  isActive: boolean
+  maxAttendees?: number
   currentAttendees: number
+  attendees: EventAttendee[]
   price: number
-  currency: "USD" | "EUR" | "MXN"
-  isFree: boolean
-  status: EventStatus
-  visibility: "public" | "private" | "space_only"
+  currency: string
+  tickets: any[]
   tags: string[]
-  images: string[]
-  coverImage?: string
-  isLiveStream: boolean
-  streamUrl?: string
-  streamKey?: string
-  streamStatus: "offline" | "live" | "ended"
-  maxViewers?: number
-  currentViewers?: number
+  speakers: any[]
+  sponsors: any[]
+  streaming: EventStream
+  settings: any
+  stats: any
   createdAt: Date
   updatedAt: Date
 }
 
-export type EventType = "workshop" | "conference" | "meetup" | "concert" | "exhibition" | "webinar" | "streaming" | "competition" | "hackathon" | "other"
+export type EventType = "online" | "offline" | "hybrid"
+export type EventCategory = "conference" | "workshop" | "meetup" | "concert" | "exhibition" | "sports" | "other"
 export type EventStatus = "draft" | "published" | "cancelled" | "completed" | "sold_out"
-
-export interface EventCategory {
-  id: string
-  name: string
-  icon: string
-  description: string
-  color: string
-}
 
 export interface EventLocation {
   type: "physical" | "virtual" | "hybrid"

@@ -6,6 +6,7 @@ import { Syne } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Suspense } from "react"
 import { MainLayout } from "@/components/layout/main-layout"
+import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -30,6 +31,7 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
             <MainLayout>{children}</MainLayout>
+            <Toaster />
           </ThemeProvider>
         </Suspense>
       </body>

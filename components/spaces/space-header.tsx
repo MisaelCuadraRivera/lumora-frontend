@@ -8,27 +8,44 @@ import type { Space } from "@/types"
 import { Users, UserPlus, UserCheck, Share, Settings, TrendingUp, ListChecks } from "lucide-react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useSpace } from "@/hooks/useSpace"
+import { toast } from "sonner"
 
 interface SpaceHeaderProps {
   space: Space
-  isOwner?: boolean
-  onJoin?: () => void
-  onLeave?: () => void
+  spaceId: string
 }
 
-export function SpaceHeader({ space, isOwner = false, onJoin, onLeave }: SpaceHeaderProps) {
-  const [isJoined, setIsJoined] = useState(space.isJoined)
+export function SpaceHeader({ space, spaceId }: SpaceHeaderProps) {
+  const [isJoined, setIsJoined] = useState(space.isJoined || false)
   const router = useRouter()
+  const { joinSpace, leaveSpace } = useSpace(spaceId)
 
-  const handleToggleJoin = () => {
-    if (isJoined) {
-      setIsJoined(false)
-      onLeave?.()
-    } else {
-      setIsJoined(true)
-      onJoin?.()
+  const handleToggleJoin = async () => {
+    try {
+      if (isJoined) {
+        const result = await leaveSpace()
+        if (result.success) {
+          setIsJoined(false)
+          toast.success(result.message || "Has salido del espacio")
+        } else {
+          toast.error(result.message || "Error saliendo del espacio")
+        }
+      } else {
+        const result = await joinSpace()
+        if (result.success) {
+          setIsJoined(true)
+          toast.success(result.message || "Te has unido al espacio")
+        } else {
+          toast.error(result.message || "Error uniéndose al espacio")
+        }
+      }
+    } catch (error) {
+      toast.error("Error de conexión")
     }
   }
+
+  const isOwner = space.ownerId === space.owner?.id // Asumiendo que tenemos el usuario actual
 
   return (
     <div className="relative">
@@ -60,16 +77,16 @@ export function SpaceHeader({ space, isOwner = false, onJoin, onLeave }: SpaceHe
                 <div className="flex items-center gap-4 text-sm">
                   <div className="flex items-center gap-1">
                     <Users className="h-4 w-4" />
-                    <span>Miembros: {space.memberCount.toLocaleString()}</span>
+                    <span>Miembros: {space.memberCount?.toLocaleString() || 0}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <TrendingUp className="h-4 w-4 text-green-500" />
-                    <span>Activos ahora: {space.activeMembers}</span>
+                    <span>Activos ahora: {space.activeMembers || 0}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">{space.category}</Badge>
-                  {space.tags.slice(0, 3).map((tag) => (
+                  {(space.tags || []).slice(0, 3).map((tag) => (
                     <Badge key={tag} variant="secondary" className="text-xs">
                       #{tag}
                     </Badge>
@@ -97,7 +114,7 @@ export function SpaceHeader({ space, isOwner = false, onJoin, onLeave }: SpaceHe
                   {isJoined ? (
                     <>
                       <UserCheck className="h-4 w-4 mr-2" />
-                      Unirse al Espacio
+                      Salir del Espacio
                     </>
                   ) : (
                     <>

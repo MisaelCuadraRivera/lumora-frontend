@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useAuth } from "@/lib/auth"
+import { useToast } from "@/hooks/use-toast"
 import { Loader2, Mail, User, Lock, Apple, Chrome, Settings } from "lucide-react"
 import { AnimatedLogo } from "@/components/ui/animated-logo"
 import { SpaceBackground } from "@/components/ui/space-background"
@@ -15,25 +16,49 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [username, setUsername] = useState("")
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
   const [isLogin, setIsLogin] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [focusedField, setFocusedField] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState("") // Solo para campos requeridos
   const { login, register } = useAuth()
+  const { toast } = useToast()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setErrorMessage("")
 
-    let success = false
-    if (isLogin) {
-      success = await login(email, password)
-    } else {
-      success = await register(email, password, username)
-    }
-    
-    if (success) {
-      router.push("/")
+    try {
+      let result
+      if (isLogin) {
+        result = await login(email, password)
+      } else {
+        if (!firstName.trim() || !lastName.trim()) {
+          setErrorMessage("Nombre y apellido son requeridos")
+          setIsLoading(false)
+          return
+        }
+        result = await register(email, password, username, firstName, lastName)
+      }
+      
+      if (result.success) {
+        router.push("/")
+      } else {
+        toast({
+          title: "Credenciales inválidas",
+          description: result.message || "Error en la autenticación",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error de conexión",
+        description: "Verifica que el backend esté funcionando.",
+        variant: "destructive"
+      })
     }
 
     setIsLoading(false)
@@ -132,53 +157,82 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {/* Username Field (only for register) */}
+              {/* Registration Fields (only for register) */}
               <AnimatePresence mode="wait">
                 {!isLogin && (
                   <motion.div 
-                    key="username-field"
-                    className="space-y-2"
-                    initial={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
+                    key="registration-fields"
+                    className="space-y-4"
+                    initial={{ opacity: 0, height: 0 }}
                     animate={{ 
                       opacity: 1, 
-                      height: "auto", 
-                      marginTop: "0px", 
-                      marginBottom: "0px",
+                      height: "auto",
                       transition: { 
                         duration: 0.4, 
-                        ease: "easeInOut",
-                        height: { duration: 0.4 },
-                        opacity: { delay: 0.1, duration: 0.3 }
+                        ease: "easeInOut"
                       }
                     }}
                     exit={{ 
                       opacity: 0, 
-                      height: 0, 
-                      marginTop: 0, 
-                      marginBottom: 0,
+                      height: 0,
                       transition: { 
                         duration: 0.3, 
-                        ease: "easeInOut",
-                        opacity: { duration: 0.2 },
-                        height: { delay: 0.1, duration: 0.3 }
+                        ease: "easeInOut"
                       }
                     }}
                     style={{ overflow: "hidden" }}
                   >
-                    <motion.div
-                      initial={{ y: -10, opacity: 0 }}
-                      animate={{ 
-                        y: 0, 
-                        opacity: 1,
-                        transition: { delay: 0.2, duration: 0.3, ease: "easeOut" }
-                      }}
-                      exit={{ 
-                        y: -10, 
-                        opacity: 0,
-                        transition: { duration: 0.2, ease: "easeIn" }
-                      }}
-                    >
-                      <label className="text-white/90 text-sm font-medium block mb-2">Nombre de usuario</label>
+                    {/* First Name and Last Name */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <label className="text-white/90 text-sm font-medium block">Nombre</label>
+                        <div className="relative">
+                          <User className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 transition-colors duration-300 ${
+                            focusedField === 'firstName' ? 'text-highlight' : 'text-white/50'
+                          }`} />
+                          <Input
+                            type="text"
+                            placeholder="Tu nombre"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            onFocus={() => setFocusedField('firstName')}
+                            onBlur={() => setFocusedField(null)}
+                            required={!isLogin}
+                            className={`w-full pl-10 pr-3 py-3 rounded-xl text-white backdrop-blur-sm transition-all duration-300 bg-transparent text-sm ${
+                              focusedField === 'firstName'
+                                ? 'border-2 border-highlight/50 placeholder-white/50 focus:border-highlight focus:ring-2 focus:ring-highlight/20'
+                                : 'border border-white/20 placeholder-white/40 focus:border-white/40 focus:ring-2 focus:ring-white/10'
+                            }`}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-white/90 text-sm font-medium block">Apellido</label>
+                        <div className="relative">
+                          <User className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 transition-colors duration-300 ${
+                            focusedField === 'lastName' ? 'text-highlight' : 'text-white/50'
+                          }`} />
+                          <Input
+                            type="text"
+                            placeholder="Tu apellido"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            onFocus={() => setFocusedField('lastName')}
+                            onBlur={() => setFocusedField(null)}
+                            required={!isLogin}
+                            className={`w-full pl-10 pr-3 py-3 rounded-xl text-white backdrop-blur-sm transition-all duration-300 bg-transparent text-sm ${
+                              focusedField === 'lastName'
+                                ? 'border-2 border-highlight/50 placeholder-white/50 focus:border-highlight focus:ring-2 focus:ring-highlight/20'
+                                : 'border border-white/20 placeholder-white/40 focus:border-white/40 focus:ring-2 focus:ring-white/10'
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Username Field */}
+                    <div className="space-y-2">
+                      <label className="text-white/90 text-sm font-medium block">Nombre de usuario</label>
                       <div className="relative">
                         <User className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-300 ${
                           focusedField === 'username' ? 'text-highlight' : 'text-white/50'
@@ -198,7 +252,7 @@ export default function LoginPage() {
                           }`}
                         />
                       </div>
-                    </motion.div>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -231,6 +285,18 @@ export default function LoginPage() {
                   </p>
                 )}
               </div>
+
+              {/* Error Message solo para campos requeridos */}
+              {errorMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="bg-red-500/20 border border-red-500/50 rounded-xl p-3 text-red-200 text-sm"
+                >
+                  {errorMessage}
+                </motion.div>
+              )}
 
               {/* Submit Button */}
               <motion.div
