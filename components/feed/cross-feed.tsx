@@ -29,6 +29,8 @@ import {
   Bookmark
 } from "lucide-react"
 import { PostCard } from "@/components/posts/post-card"
+import { CreatePost } from "@/components/posts/create-post"
+import { usePosts } from "@/hooks/usePosts"
 
 const feedAlgorithms = [
   { id: "chronological", name: "Cronológico", icon: Clock, description: "Posts más recientes primero" },
@@ -46,6 +48,7 @@ const contentTypes = [
 
 export function CrossFeed() {
   const { user } = useAuth()
+  const { posts: backendPosts, createPost, loading: postsLoading } = usePosts()
   const [selectedAlgorithm, setSelectedAlgorithm] = useState("mixed")
   const [selectedContentType, setSelectedContentType] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
@@ -59,6 +62,29 @@ export function CrossFeed() {
   })
   const [posts, setPosts] = useState(mockPosts)
 
+  // Función para manejar la creación de posts
+  const handleCreatePost = async (content: string, facetId?: string, spaceId?: string, tags?: string[]) => {
+    try {
+      const postData = {
+        content,
+        facetId,
+        spaceId,
+        tags: tags || [],
+        type: 'text'
+      }
+      
+      const result = await createPost(postData)
+      if (result.success) {
+        // El hook usePosts ya actualiza automáticamente la lista de posts
+        console.log('Post creado exitosamente')
+      } else {
+        console.error('Error creando post:', result.message)
+      }
+    } catch (error) {
+      console.error('Error creando post:', error)
+    }
+  }
+
   // Simular feed cruzado
   const generateCrossFeed = () => {
     // En una implementación real, esto mezclaría contenido de:
@@ -68,7 +94,8 @@ export function CrossFeed() {
     // - Contenido trending
     // - Basado en el algoritmo seleccionado
     
-    let filteredPosts = [...mockPosts]
+    // Usar posts del backend si están disponibles, sino usar mockPosts
+    let filteredPosts = [...(backendPosts.length > 0 ? backendPosts : mockPosts)]
 
     // Aplicar filtros
     if (filters.showMediaOnly) {
@@ -107,7 +134,7 @@ export function CrossFeed() {
 
   useEffect(() => {
     generateCrossFeed()
-  }, [selectedAlgorithm, filters, selectedContentType])
+  }, [selectedAlgorithm, filters, selectedContentType, backendPosts])
 
   const handleFilterChange = (key: string, value: boolean) => {
     setFilters(prev => ({ ...prev, [key]: value }))
@@ -288,6 +315,9 @@ export function CrossFeed() {
         <TabsContent value={selectedContentType} className="mt-6">
           {/* Feed Content */}
           <div className="space-y-4">
+            {/* Componente para crear posts */}
+            <CreatePost onPost={handleCreatePost} />
+            
             <AnimatePresence>
               {posts.map((post, index) => (
                 <motion.div
@@ -302,13 +332,22 @@ export function CrossFeed() {
               ))}
             </AnimatePresence>
 
-            {posts.length === 0 && (
+            {posts.length === 0 && !postsLoading && (
               <div className="text-center py-12">
                 <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No hay contenido</h3>
                 <p className="text-muted-foreground">
                   Ajusta los filtros o crea contenido para ver posts en tu feed
                 </p>
+              </div>
+            )}
+
+            {postsLoading && (
+              <div className="text-center py-12">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                  <span className="text-muted-foreground">Cargando posts...</span>
+                </div>
               </div>
             )}
           </div>

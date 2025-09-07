@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -32,32 +33,49 @@ interface EventCardProps {
   event: Event
   viewMode: "grid" | "list"
   onRSVP: (eventId: string) => void
-  onLike: (eventId: string) => void
+  onCancelRSVP?: (eventId: string) => void
 }
 
-export function EventCard({ event, viewMode, onRSVP, onLike }: EventCardProps) {
+export function EventCard({ event, viewMode, onRSVP, onCancelRSVP }: EventCardProps) {
   const { user } = useAuth()
   const { toast } = useToast()
+  const router = useRouter()
   const [isLiked, setIsLiked] = useState(false)
   const [isRegistered, setIsRegistered] = useState(false)
 
-  const handleRSVP = () => {
+  const handleCardClick = () => {
+    router.push(`/events/${event.id}`)
+  }
+
+  const handleRSVP = (e: React.MouseEvent) => {
+    e.stopPropagation() // Evitar que se active el click de la tarjeta
+    if (isRegistered && onCancelRSVP) {
+      onCancelRSVP(event.id)
+    } else {
+      onRSVP(event.id)
+    }
     setIsRegistered(!isRegistered)
-    onRSVP(event.id)
   }
 
-  const handleLike = () => {
-    setIsLiked(!isLiked)
-    onLike(event.id)
-  }
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('es-MX', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date)
+  const formatDate = (date: Date | string) => {
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date
+      
+      // Verificar si la fecha es válida
+      if (isNaN(dateObj.getTime())) {
+        return 'Fecha inválida'
+      }
+      
+      return new Intl.DateTimeFormat('es-MX', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(dateObj)
+    } catch (error) {
+      console.error('Error formatting date:', error, 'Date value:', date)
+      return 'Fecha inválida'
+    }
   }
 
   const formatPrice = (price: number, currency: string) => {
@@ -94,19 +112,30 @@ export function EventCard({ event, viewMode, onRSVP, onLike }: EventCardProps) {
     }
   }
 
-  const isLive = event.streamStatus === "live"
-  const isUpcoming = event.startDate > new Date()
-  const isSoldOut = event.currentAttendees >= event.capacity
+  const isLive = event.streaming?.enabled && event.streaming?.url
+  const isUpcoming = (() => {
+    try {
+      const eventDate = new Date(event.startDate)
+      return !isNaN(eventDate.getTime()) && eventDate > new Date()
+    } catch (error) {
+      console.error('Error comparing dates:', error, 'Start date:', event.startDate)
+      return false
+    }
+  })()
+  const isSoldOut = event.maxAttendees ? event.currentAttendees >= event.maxAttendees : false
 
   if (viewMode === "list") {
     return (
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all">
+      <Card 
+        className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all cursor-pointer"
+        onClick={handleCardClick}
+      >
         <CardContent className="p-4">
           <div className="flex items-start gap-4">
             {/* Event Image */}
             <div className="relative w-48 h-32 rounded-lg overflow-hidden bg-muted">
               <img 
-                src={event.coverImage || event.images[0] || "/placeholder.svg"} 
+                src={event.image || event.banner || "/placeholder.svg"} 
                 alt={event.title}
                 className="w-full h-full object-cover"
               />
@@ -116,7 +145,7 @@ export function EventCard({ event, viewMode, onRSVP, onLike }: EventCardProps) {
                   EN VIVO
                 </div>
               )}
-              {event.isLiveStream && (
+              {event.streaming?.enabled && (
                 <Badge className="absolute top-2 right-2 bg-blue-500">
                   <Video className="w-3 h-3 mr-1" />
                   Streaming
@@ -125,7 +154,7 @@ export function EventCard({ event, viewMode, onRSVP, onLike }: EventCardProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleLike}
+                onClick={() => setIsLiked(!isLiked)}
                 className={`absolute bottom-2 right-2 bg-background/80 hover:bg-background/90 ${
                   isLiked ? "text-red-500" : ""
                 }`}
@@ -141,9 +170,8 @@ export function EventCard({ event, viewMode, onRSVP, onLike }: EventCardProps) {
                   <div className="flex items-center gap-2 mb-1">
                     <Badge 
                       variant="outline" 
-                      style={{ borderColor: event.category.color, color: event.category.color }}
                     >
-                      {event.category.icon} {event.category.name}
+                      {event.category}
                     </Badge>
                     {isLive && (
                       <Badge variant="destructive">
@@ -172,7 +200,11 @@ export function EventCard({ event, viewMode, onRSVP, onLike }: EventCardProps) {
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm">
-                    {event.currentAttendees}/{event.capacity} asistentes
+                    {event.maxAttendees ? (
+                      `${event.currentAttendees}/${event.maxAttendees} asistentes`
+                    ) : (
+                      `${event.currentAttendees} asistentes`
+                    )}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -186,13 +218,13 @@ export function EventCard({ event, viewMode, onRSVP, onLike }: EventCardProps) {
               {/* Organizer Info */}
               <div className="flex items-center gap-2 mb-3">
                 <Avatar className="w-6 h-6">
-                  <AvatarImage src={event.organizer.avatar} />
+                  <AvatarImage src={event.creator?.avatar} />
                   <AvatarFallback className="text-xs">
-                    {event.organizer.username.charAt(0).toUpperCase()}
+                    {event.creator?.username?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <span className="text-sm text-muted-foreground">
-                  {event.organizer.username}
+                  {event.creator?.username || "Usuario"}
                 </span>
                 {event.space && (
                   <>
@@ -236,7 +268,7 @@ export function EventCard({ event, viewMode, onRSVP, onLike }: EventCardProps) {
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => window.open(event.streamUrl, '_blank')}
+                      onClick={() => window.open(event.streaming?.url, '_blank')}
                     >
                       <Play className="w-4 h-4 mr-1" />
                       Ver en vivo
@@ -266,12 +298,15 @@ export function EventCard({ event, viewMode, onRSVP, onLike }: EventCardProps) {
 
   // Grid View
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all group">
+    <Card 
+      className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all group cursor-pointer"
+      onClick={handleCardClick}
+    >
       <CardContent className="p-4">
         {/* Event Image */}
         <div className="relative aspect-video rounded-lg overflow-hidden bg-muted mb-4">
           <img 
-            src={event.coverImage || event.images[0] || "/placeholder.svg"} 
+            src={event.image || event.banner || "/placeholder.svg"} 
             alt={event.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -281,7 +316,7 @@ export function EventCard({ event, viewMode, onRSVP, onLike }: EventCardProps) {
               EN VIVO
             </div>
           )}
-          {event.isLiveStream && (
+          {event.streaming?.enabled && (
             <Badge className="absolute top-2 right-2 bg-blue-500">
               <Video className="w-3 h-3 mr-1" />
               Streaming
@@ -290,7 +325,7 @@ export function EventCard({ event, viewMode, onRSVP, onLike }: EventCardProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleLike}
+            onClick={() => setIsLiked(!isLiked)}
             className={`absolute bottom-2 right-2 bg-background/80 hover:bg-background/90 ${
               isLiked ? "text-red-500" : ""
             }`}
@@ -304,11 +339,10 @@ export function EventCard({ event, viewMode, onRSVP, onLike }: EventCardProps) {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Badge 
-                variant="outline" 
-                style={{ borderColor: event.category.color, color: event.category.color }}
+                variant="outline"
                 className="text-xs"
               >
-                {event.category.icon} {event.category.name}
+                {event.category}
               </Badge>
               {isLive && (
                 <Badge variant="destructive" className="text-xs">
@@ -336,7 +370,11 @@ export function EventCard({ event, viewMode, onRSVP, onLike }: EventCardProps) {
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm">
-                {event.currentAttendees}/{event.capacity}
+                {event.maxAttendees ? (
+                  `${event.currentAttendees}/${event.maxAttendees}`
+                ) : (
+                  `${event.currentAttendees}`
+                )}
               </span>
             </div>
           </div>
@@ -344,13 +382,13 @@ export function EventCard({ event, viewMode, onRSVP, onLike }: EventCardProps) {
           {/* Organizer Info */}
           <div className="flex items-center gap-2">
             <Avatar className="w-6 h-6">
-              <AvatarImage src={event.organizer.avatar} />
+              <AvatarImage src={event.creator?.avatar} />
               <AvatarFallback className="text-xs">
-                {event.organizer.username.charAt(0).toUpperCase()}
+                {event.creator?.username?.charAt(0).toUpperCase() || "U"}
               </AvatarFallback>
             </Avatar>
             <span className="text-sm text-muted-foreground truncate">
-              {event.organizer.username}
+              {event.creator?.username || "Usuario"}
             </span>
           </div>
 

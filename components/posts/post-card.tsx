@@ -45,7 +45,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
     onShare?.(post.id)
   }
 
-  const visibleComments = showAllComments ? post.comments : post.comments.slice(0, 2)
+  const visibleComments = showAllComments ? (post.comments || []) : (post.comments || []).slice(0, 2)
 
   return (
     <motion.article

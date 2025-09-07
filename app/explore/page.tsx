@@ -6,16 +6,17 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { mockSpaces } from "@/data"
+import { useSpaces } from "@/hooks/useSpaces"
 import { Search, TrendingUp, Users, Calendar, Plus } from "lucide-react"
 
-const categories = ["Todos", "Literatura", "Arte", "Tecnología", "Viajes", "Música"]
+const categories = ["Todos", "comunidad", "proyecto", "club", "tienda", "evento", "galeria", "musica", "tecnologia"]
 
 export default function ExplorePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("Todos")
+  const { spaces, loading, error, joinSpace, leaveSpace } = useSpaces()
 
-  const filteredSpaces = mockSpaces.filter((space) => {
+  const filteredSpaces = spaces.filter((space) => {
     const matchesSearch =
       space.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       space.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -23,12 +24,22 @@ export default function ExplorePage() {
     return matchesSearch && matchesCategory
   })
 
-  const handleJoinSpace = (spaceId: string) => {
-    console.log("Joining space:", spaceId)
+  const handleJoinSpace = async (spaceId: string) => {
+    const result = await joinSpace(spaceId)
+    if (result.success) {
+      console.log("Joined space successfully")
+    } else {
+      console.error("Error joining space:", result.message)
+    }
   }
 
-  const handleLeaveSpace = (spaceId: string) => {
-    console.log("Leaving space:", spaceId)
+  const handleLeaveSpace = async (spaceId: string) => {
+    const result = await leaveSpace(spaceId)
+    if (result.success) {
+      console.log("Left space successfully")
+    } else {
+      console.error("Error leaving space:", result.message)
+    }
   }
 
   return (
@@ -85,53 +96,73 @@ export default function ExplorePage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="popular" className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-6">
-            {filteredSpaces
-              .sort((a, b) => b.memberCount - a.memberCount)
-              .map((space) => (
-                <SpaceCard key={space.id} space={space} onJoin={handleJoinSpace} onLeave={handleLeaveSpace} />
-              ))}
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Cargando espacios...</p>
           </div>
-        </TabsContent>
-
-        <TabsContent value="active" className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-6">
-            {filteredSpaces
-              .sort((a, b) => b.activeMembers - a.activeMembers)
-              .map((space) => (
-                <SpaceCard key={space.id} space={space} onJoin={handleJoinSpace} onLeave={handleLeaveSpace} />
-              ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="new" className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-6">
-            {filteredSpaces
-              .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-              .map((space) => (
-                <SpaceCard key={space.id} space={space} onJoin={handleJoinSpace} onLeave={handleLeaveSpace} />
-              ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="create" className="space-y-6">
-          <div className="max-w-2xl mx-auto text-center space-y-6">
-            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-              <Plus className="h-12 w-12 text-primary" />
+        ) : error ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-red-500 text-2xl">⚠️</span>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Crear tu propio espacio</h2>
-              <p className="text-muted-foreground">
-                ¿Tienes una pasión que quieres compartir? Crea tu propia comunidad y conecta con personas afines.
-              </p>
-            </div>
-            <Button size="lg">
-              <Plus className="h-5 w-5 mr-2" />
-              Crear espacio
+            <h3 className="text-lg font-semibold mb-2">Error cargando espacios</h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>
+              Reintentar
             </Button>
           </div>
-        </TabsContent>
+        ) : (
+          <>
+            <TabsContent value="popular" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredSpaces
+                  .sort((a, b) => (b.memberCount || 0) - (a.memberCount || 0))
+                  .map((space) => (
+                    <SpaceCard key={space.id} space={space} onJoin={handleJoinSpace} onLeave={handleLeaveSpace} />
+                  ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="active" className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-6">
+                {filteredSpaces
+                  .sort((a, b) => (b.activeMembers || 0) - (a.activeMembers || 0))
+                  .map((space) => (
+                    <SpaceCard key={space.id} space={space} onJoin={handleJoinSpace} onLeave={handleLeaveSpace} />
+                  ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="new" className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-6">
+                {filteredSpaces
+                  .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+                  .map((space) => (
+                    <SpaceCard key={space.id} space={space} onJoin={handleJoinSpace} onLeave={handleLeaveSpace} />
+                  ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="create" className="space-y-6">
+              <div className="max-w-2xl mx-auto text-center space-y-6">
+                <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                  <Plus className="h-12 w-12 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">Crear tu propio espacio</h2>
+                  <p className="text-muted-foreground">
+                    ¿Tienes una pasión que quieres compartir? Crea tu propia comunidad y conecta con personas afines.
+                  </p>
+                </div>
+                <Button size="lg">
+                  <Plus className="h-5 w-5 mr-2" />
+                  Crear espacio
+                </Button>
+              </div>
+            </TabsContent>
+          </>
+        )}
       </Tabs>
 
       {filteredSpaces.length === 0 && searchQuery && (

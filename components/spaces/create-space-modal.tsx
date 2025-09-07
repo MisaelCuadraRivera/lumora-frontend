@@ -1,468 +1,346 @@
 "use client"
 
 import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useSpaces } from "@/hooks/useSpaces"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { 
-  X, 
-  Plus, 
-  Users, 
-  BookOpen, 
-  Heart, 
-  Briefcase, 
-  ShoppingBag, 
-  Music, 
-  Camera, 
-  Code,
-  Globe,
-  Lock,
-  Eye,
-  Settings,
-  Palette,
-  Hash,
-  MessageSquare,
-  Calendar,
-  FileText,
-  Image,
-  Video,
-  Music2,
-  ShoppingCart,
-  CheckCircle,
-  Star
-} from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { Switch } from "@/components/ui/switch"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
+import { Plus, X, Users, Lock, Globe } from "lucide-react"
+import { toast } from "sonner"
 
 interface CreateSpaceModalProps {
-  isOpen: boolean
-  onClose: () => void
+  children?: React.ReactNode
+  isOpen?: boolean
+  onClose?: () => void
 }
 
-const spaceTypes = [
-  {
-    id: "community",
-    name: "Comunidad",
-    description: "Espacio para grupos con intereses comunes",
-    icon: Users,
-    color: "bg-blue-500",
-    features: ["Chat grupal", "Posts", "Eventos", "Multimedia"]
-  },
-  {
-    id: "diary",
-    name: "Diario Personal",
-    description: "Tu espacio privado para reflexiones y contenido personal",
-    icon: BookOpen,
-    color: "bg-purple-500",
-    features: ["Posts privados", "Multimedia", "Notas", "Moodboard"]
-  },
-  {
-    id: "fanclub",
-    name: "Club de Fans",
-    description: "Comunidad dedicada a artistas, creadores o marcas",
-    icon: Heart,
-    color: "bg-pink-500",
-    features: ["Fan art", "Discusiones", "Eventos", "Exclusivos"]
-  },
-  {
-    id: "project",
-    name: "Proyecto",
-    description: "Espacio para colaborar en proyectos creativos o profesionales",
-    icon: Briefcase,
-    color: "bg-green-500",
-    features: ["Tareas", "Documentos", "Chat", "Timeline"]
-  },
-  {
-    id: "marketplace",
-    name: "Marketplace",
-    description: "Tienda digital para vender productos o servicios",
-    icon: ShoppingBag,
-    color: "bg-orange-500",
-    features: ["Catálogo", "Pagos", "Reviews", "Chat"]
-  },
-  {
-    id: "gallery",
-    name: "Galería",
-    description: "Espacio para mostrar arte, fotografía o contenido visual",
-    icon: Camera,
-    color: "bg-indigo-500",
-    features: ["Galería", "Portfolio", "Comentarios", "Ventas"]
-  },
-  {
-    id: "music",
-    name: "Música",
-    description: "Espacio para compartir y descubrir música",
-    icon: Music,
-    color: "bg-red-500",
-    features: ["Playlists", "Streaming", "Colaboraciones", "Eventos"]
-  },
-  {
-    id: "tech",
-    name: "Tecnología",
-    description: "Comunidad para desarrolladores y entusiastas tech",
-    icon: Code,
-    color: "bg-gray-500",
-    features: ["Code sharing", "Tutoriales", "Discusiones", "Proyectos"]
-  }
+const spaceCategories = [
+  { value: "comunidad", label: "Comunidad", icon: "👥" },
+  { value: "proyecto", label: "Proyecto", icon: "🚀" },
+  { value: "club", label: "Club de Fans", icon: "❤️" },
+  { value: "tienda", label: "Marketplace", icon: "🛒" },
+  { value: "evento", label: "Evento", icon: "📅" },
+  { value: "galeria", label: "Galería", icon: "🖼️" },
+  { value: "musica", label: "Música", icon: "🎵" },
+  { value: "tecnologia", label: "Tecnología", icon: "💻" }
 ]
 
-const modules = [
-  { id: "chat", name: "Chat", icon: MessageSquare, description: "Chat grupal y privado" },
-  { id: "posts", name: "Posts", icon: FileText, description: "Publicaciones y contenido" },
-  { id: "events", name: "Eventos", icon: Calendar, description: "Eventos y meetups" },
-  { id: "multimedia", name: "Multimedia", icon: Image, description: "Galerías y contenido visual" },
-  { id: "music", name: "Música", icon: Music2, description: "Playlists y streaming" },
-  { id: "marketplace", name: "Marketplace", icon: ShoppingCart, description: "Ventas y productos" },
-  { id: "tasks", name: "Tareas", icon: CheckCircle, description: "Gestión de proyectos" },
-  { id: "reviews", name: "Reviews", icon: Star, description: "Sistema de valoraciones" }
-]
-
-export function CreateSpaceModal({ isOpen, onClose }: CreateSpaceModalProps) {
-  const [step, setStep] = useState(1)
-  const [selectedType, setSelectedType] = useState("")
-  const [spaceData, setSpaceData] = useState({
+export function CreateSpaceModal({ children, isOpen, onClose }: CreateSpaceModalProps) {
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
     name: "",
     description: "",
-    privacy: "public",
-    selectedModules: [] as string[],
-    theme: "default",
-    allowInvites: true,
-    requireApproval: false
+    category: "comunidad",
+    isPublic: true,
+    tags: [] as string[],
+    tagInput: ""
   })
-  const { toast } = useToast()
 
-  const handleModuleToggle = (moduleId: string) => {
-    setSpaceData(prev => ({
+  const { createSpace } = useSpaces()
+
+  // Usar el estado externo si se proporciona, o el estado interno
+  const modalOpen = isOpen !== undefined ? isOpen : open
+  const setModalOpen = onClose ? onClose : setOpen
+
+  const handleClose = () => {
+    setModalOpen()
+    setFormData({
+      name: "",
+      description: "",
+      category: "comunidad",
+      isPublic: true,
+      tags: [],
+      tagInput: ""
+    })
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Validaciones del frontend
+    if (!formData.name.trim()) {
+      toast.error("El nombre del espacio es requerido")
+      return
+    }
+    
+    if (formData.name.length < 3) {
+      toast.error("El nombre debe tener al menos 3 caracteres")
+      return
+    }
+    
+    if (formData.name.length > 100) {
+      toast.error("El nombre no puede exceder 100 caracteres")
+      return
+    }
+    
+    if (formData.description.length > 1000) {
+      toast.error("La descripción no puede exceder 1000 caracteres")
+      return
+    }
+    
+    if (formData.tags.length > 10) {
+      toast.error("No puedes tener más de 10 tags")
+      return
+    }
+
+    setLoading(true)
+    
+    try {
+      const spaceData = {
+        name: formData.name,
+        description: formData.description,
+        category: formData.category,
+        isPublic: formData.isPublic,
+        tags: formData.tags,
+        settings: {
+          modules: {
+            chat: true,
+            posts: true,
+            events: formData.category === "evento",
+            marketplace: formData.category === "tienda",
+            tasks: formData.category === "proyecto",
+            multimedia: formData.category === "galeria" || formData.category === "musica" || formData.category === "tecnologia"
+          },
+          privacy: formData.isPublic ? "public" : "private",
+          moderation: "owner"
+        }
+      }
+      
+      console.log("Enviando datos del espacio:", spaceData)
+      const result = await createSpace(spaceData)
+
+      if (result.success) {
+        toast.success(result.message || "Espacio creado exitosamente")
+        handleClose()
+      } else {
+        toast.error(result.message || "Error creando el espacio")
+      }
+    } catch (error) {
+      toast.error("Error de conexión")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const addTag = () => {
+    if (formData.tagInput.trim() && formData.tags.length < 10) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, prev.tagInput.trim()],
+        tagInput: ""
+      }))
+    }
+  }
+
+  const removeTag = (index: number) => {
+    setFormData(prev => ({
       ...prev,
-      selectedModules: prev.selectedModules.includes(moduleId)
-        ? prev.selectedModules.filter(id => id !== moduleId)
-        : [...prev.selectedModules, moduleId]
+      tags: prev.tags.filter((_, i) => i !== index)
     }))
   }
 
-  const handleNext = () => {
-    if (step === 1 && !selectedType) {
-      toast({
-        title: "Selecciona un tipo de espacio",
-        description: "Elige el tipo de espacio que quieres crear",
-        variant: "destructive"
-      })
-      return
-    }
-    if (step === 2 && !spaceData.name.trim()) {
-      toast({
-        title: "Nombre requerido",
-        description: "El nombre del espacio es obligatorio",
-        variant: "destructive"
-      })
-      return
-    }
-    setStep(step + 1)
-  }
-
-  const handleBack = () => {
-    setStep(step - 1)
-  }
-
-  const handleCreate = async () => {
-    try {
-      // Aquí iría la lógica para crear el espacio
-      toast({
-        title: "¡Espacio creado!",
-        description: `"${spaceData.name}" ha sido creado exitosamente`,
-      })
-      onClose()
-      setStep(1)
-      setSelectedType("")
-      setSpaceData({
-        name: "",
-        description: "",
-        privacy: "public",
-        selectedModules: [],
-        theme: "default",
-        allowInvites: true,
-        requireApproval: false
-      })
-    } catch (error) {
-      toast({
-        title: "Error al crear espacio",
-        description: "Hubo un problema al crear el espacio",
-        variant: "destructive"
-      })
-    }
-  }
+  const selectedCategory = spaceCategories.find(cat => cat.value === formData.category)
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={modalOpen} onOpenChange={handleClose}>
+      {children && (
+        <DialogTrigger asChild>
+          {children}
+        </DialogTrigger>
+      )}
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <DialogTitle className="flex items-center gap-2">
+            <Plus className="h-5 w-5" />
             Crear Nuevo Espacio
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Progress Steps */}
-          <div className="flex items-center justify-between">
-            {[1, 2, 3].map((stepNumber) => (
-              <div key={stepNumber} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step >= stepNumber ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                }`}>
-                  {stepNumber}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Información Básica */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Información Básica</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nombre del Espacio *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Ej: Comunidad de Arte Digital"
+                  maxLength={100}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Descripción</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Describe el propósito y objetivos de tu espacio..."
+                  maxLength={1000}
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="category">Categoría</Label>
+                <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona una categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {spaceCategories.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        <div className="flex items-center gap-2">
+                          <span>{category.icon}</span>
+                          <span>{category.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Configuración */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Configuración</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="isPublic">Espacio Público</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Los espacios públicos pueden ser encontrados y unirse libremente
+                  </p>
                 </div>
-                {stepNumber < 3 && (
-                  <div className={`w-16 h-1 mx-2 ${
-                    step > stepNumber ? "bg-primary" : "bg-muted"
-                  }`} />
+                <Switch
+                  id="isPublic"
+                  checked={formData.isPublic}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPublic: checked }))}
+                />
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                {formData.isPublic ? (
+                  <>
+                    <Globe className="h-4 w-4" />
+                    <span>Espacio público - Visible para todos</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-4 w-4" />
+                    <span>Espacio privado - Solo por invitación</span>
+                  </>
                 )}
               </div>
-            ))}
-          </div>
+            </CardContent>
+          </Card>
 
-          {/* Step 1: Select Space Type */}
-          {step === 1 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-4"
-            >
-              <div>
-                <h3 className="text-lg font-semibold mb-2">¿Qué tipo de espacio quieres crear?</h3>
-                <p className="text-muted-foreground">Elige el tipo que mejor se adapte a tus necesidades</p>
+          {/* Tags */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Etiquetas</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  value={formData.tagInput}
+                  onChange={(e) => setFormData(prev => ({ ...prev, tagInput: e.target.value }))}
+                  placeholder="Agregar etiqueta..."
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                />
+                <Button type="button" onClick={addTag} disabled={!formData.tagInput.trim() || formData.tags.length >= 10}>
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {spaceTypes.map((type) => (
-                  <Card
-                    key={type.id}
-                    className={`cursor-pointer transition-all hover:shadow-lg ${
-                      selectedType === type.id ? "ring-2 ring-primary" : ""
-                    }`}
-                    onClick={() => setSelectedType(type.id)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${type.color} text-white`}>
-                          <type.icon className="w-6 h-6" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold">{type.name}</h4>
-                          <p className="text-sm text-muted-foreground mb-2">{type.description}</p>
-                          <div className="flex flex-wrap gap-1">
-                            {type.features.map((feature) => (
-                              <Badge key={feature} variant="secondary" className="text-xs">
-                                {feature}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Step 2: Basic Information */}
-          {step === 2 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-4"
-            >
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Información básica</h3>
-                <p className="text-muted-foreground">Configura los detalles fundamentales de tu espacio</p>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="space-name">Nombre del espacio</Label>
-                  <Input
-                    id="space-name"
-                    placeholder="Ej: Comunidad de Desarrolladores"
-                    value={spaceData.name}
-                    onChange={(e) => setSpaceData(prev => ({ ...prev, name: e.target.value }))}
-                  />
+              {formData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {formData.tags.map((tag, index) => (
+                    <Badge key={index} variant="secondary" className="gap-1">
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(index)}
+                        className="ml-1 hover:bg-muted rounded-full p-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
                 </div>
+              )}
 
-                <div>
-                  <Label htmlFor="space-description">Descripción</Label>
-                  <Textarea
-                    id="space-description"
-                    placeholder="Describe qué es tu espacio y qué ofrece..."
-                    value={spaceData.description}
-                    onChange={(e) => setSpaceData(prev => ({ ...prev, description: e.target.value }))}
-                    rows={3}
-                  />
-                </div>
+              <p className="text-xs text-muted-foreground">
+                Máximo 10 etiquetas. Presiona Enter para agregar.
+              </p>
+            </CardContent>
+          </Card>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Vista Previa */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Vista Previa</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="border rounded-lg p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-xl">{selectedCategory?.icon}</span>
+                  </div>
                   <div>
-                    <Label htmlFor="privacy">Privacidad</Label>
-                    <Select
-                      value={spaceData.privacy}
-                      onValueChange={(value) => setSpaceData(prev => ({ ...prev, privacy: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="public">
-                          <div className="flex items-center gap-2">
-                            <Globe className="w-4 h-4" />
-                            Público
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="private">
-                          <div className="flex items-center gap-2">
-                            <Lock className="w-4 h-4" />
-                            Privado
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="friends">
-                          <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4" />
-                            Solo amigos
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="theme">Tema visual</Label>
-                    <Select
-                      value={spaceData.theme}
-                      onValueChange={(value) => setSpaceData(prev => ({ ...prev, theme: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="default">Tema por defecto</SelectItem>
-                        <SelectItem value="dark">Modo oscuro</SelectItem>
-                        <SelectItem value="minimal">Minimalista</SelectItem>
-                        <SelectItem value="colorful">Colorido</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <h3 className="font-semibold">{formData.name || "Nombre del espacio"}</h3>
+                    <p className="text-sm text-muted-foreground">{selectedCategory?.label}</p>
                   </div>
                 </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      <Label htmlFor="allow-invites">Permitir invitaciones</Label>
-                    </div>
-                    <Switch
-                      id="allow-invites"
-                      checked={spaceData.allowInvites}
-                      onCheckedChange={(checked) => setSpaceData(prev => ({ ...prev, allowInvites: checked }))}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4" />
-                      <Label htmlFor="require-approval">Aprobación manual</Label>
-                    </div>
-                    <Switch
-                      id="require-approval"
-                      checked={spaceData.requireApproval}
-                      onCheckedChange={(checked) => setSpaceData(prev => ({ ...prev, requireApproval: checked }))}
-                    />
-                  </div>
+                {formData.description && (
+                  <p className="text-sm text-muted-foreground">{formData.description}</p>
+                )}
+                <div className="flex items-center gap-2">
+                  {formData.isPublic ? (
+                    <Badge variant="outline" className="gap-1">
+                      <Globe className="h-3 w-3" />
+                      Público
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="gap-1">
+                      <Lock className="h-3 w-3" />
+                      Privado
+                    </Badge>
+                  )}
+                  <Badge variant="outline" className="gap-1">
+                    <Users className="h-3 w-3" />
+                    0 miembros
+                  </Badge>
                 </div>
               </div>
-            </motion.div>
-          )}
+            </CardContent>
+          </Card>
 
-          {/* Step 3: Modules Selection */}
-          {step === 3 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-4"
-            >
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Módulos y funcionalidades</h3>
-                <p className="text-muted-foreground">Personaliza tu espacio seleccionando las herramientas que necesitas</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {modules.map((module) => (
-                  <Card
-                    key={module.id}
-                    className={`cursor-pointer transition-all hover:shadow-lg ${
-                      spaceData.selectedModules.includes(module.id) ? "ring-2 ring-primary" : ""
-                    }`}
-                    onClick={() => handleModuleToggle(module.id)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                          spaceData.selectedModules.includes(module.id) ? "bg-primary" : "bg-muted"
-                        }`}>
-                          <module.icon className={`w-5 h-5 ${
-                            spaceData.selectedModules.includes(module.id) ? "text-primary-foreground" : "text-muted-foreground"
-                          }`} />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium">{module.name}</h4>
-                          <p className="text-sm text-muted-foreground">{module.description}</p>
-                        </div>
-                        {spaceData.selectedModules.includes(module.id) && (
-                          <CheckCircle className="w-5 h-5 text-primary" />
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <h4 className="font-medium mb-2">Resumen del espacio</h4>
-                <div className="space-y-2 text-sm">
-                  <p><strong>Nombre:</strong> {spaceData.name}</p>
-                  <p><strong>Tipo:</strong> {spaceTypes.find(t => t.id === selectedType)?.name}</p>
-                  <p><strong>Privacidad:</strong> {spaceData.privacy === 'public' ? 'Público' : spaceData.privacy === 'private' ? 'Privado' : 'Solo amigos'}</p>
-                  <p><strong>Módulos seleccionados:</strong> {spaceData.selectedModules.length}</p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between pt-4">
-            <Button
-              variant="outline"
-              onClick={step === 1 ? onClose : handleBack}
-              disabled={step === 1}
-            >
-              {step === 1 ? "Cancelar" : "Atrás"}
+          {/* Botones */}
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="outline" onClick={handleClose}>
+              Cancelar
             </Button>
-
-            <Button
-              onClick={step === 3 ? handleCreate : handleNext}
-              className="min-w-[100px]"
-            >
-              {step === 3 ? "Crear Espacio" : "Siguiente"}
+            <Button type="submit" disabled={loading || !formData.name.trim()}>
+              {loading ? "Creando..." : "Crear Espacio"}
             </Button>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   )

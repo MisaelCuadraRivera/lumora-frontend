@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CreateSpaceModal } from "@/components/spaces/create-space-modal"
 import { AnimatedLogo } from "@/components/ui/animated-logo"
+import { useSpaces } from "@/hooks/useSpaces"
 import { 
   Plus, 
   Users, 
@@ -17,185 +18,211 @@ import {
   Camera, 
   Code,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  BookOpen,
+  Globe,
+  Compass,
+  Calendar
 } from "lucide-react"
 import { motion } from "framer-motion"
+import { DebugPanel } from "@/components/debug-panel"
 
 export default function RootPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const router = useRouter()
+  const { spaces, loading, error } = useSpaces()
 
-  const featuredSpaces = [
-    {
-      id: "1",
-      name: "Comunidad de Desarrolladores",
-      type: "community",
-      description: "Espacio para compartir conocimiento y proyectos tech",
-      memberCount: 1247,
-      icon: Code,
-      color: "bg-blue-500"
-    },
-    {
-      id: "2",
-      name: "Club de Fans de Música Indie",
-      type: "fanclub",
-      description: "Descubre y comparte la mejor música independiente",
-      memberCount: 892,
-      icon: Music,
-      color: "bg-pink-500"
-    },
-    {
-      id: "3",
-      name: "Galería de Arte Digital",
-      type: "gallery",
-      description: "Exposición de arte digital y NFT",
-      memberCount: 567,
-      icon: Camera,
-      color: "bg-indigo-500"
+  // Debug logs
+  console.log('RootPage - spaces:', spaces)
+  console.log('RootPage - loading:', loading)
+  console.log('RootPage - error:', error)
+
+  // Mapeo de categorías a iconos y colores
+  const getCategoryInfo = (category: string) => {
+    const categoryMap: Record<string, { icon: any; color: string; label: string }> = {
+      'comunidad': { icon: Users, color: 'bg-blue-500', label: 'Comunidad' },
+      'proyecto': { icon: Briefcase, color: 'bg-green-500', label: 'Proyecto' },
+      'club': { icon: Heart, color: 'bg-pink-500', label: 'Club de Fans' },
+      'tienda': { icon: ShoppingBag, color: 'bg-purple-500', label: 'Marketplace' },
+      'evento': { icon: Calendar, color: 'bg-orange-500', label: 'Evento' },
+      'galeria': { icon: Camera, color: 'bg-indigo-500', label: 'Galería' },
+      'musica': { icon: Music, color: 'bg-red-500', label: 'Música' },
+      'tecnologia': { icon: Code, color: 'bg-cyan-500', label: 'Tecnología' },
+      'Literatura': { icon: BookOpen, color: 'bg-amber-500', label: 'Literatura' },
+      'Arte': { icon: Camera, color: 'bg-indigo-500', label: 'Arte' },
+      'Viajes': { icon: Globe, color: 'bg-emerald-500', label: 'Viajes' },
+      'Tecnología': { icon: Code, color: 'bg-cyan-500', label: 'Tecnología' },
+      'Música': { icon: Music, color: 'bg-red-500', label: 'Música' }
     }
-  ]
+    
+    return categoryMap[category] || { icon: Users, color: 'bg-gray-500', label: category }
+  }
+
+  // Espacios destacados (los primeros 6 espacios del backend)
+  const featuredSpaces = spaces.slice(0, 6)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <div className="max-w-6xl mx-auto p-6">
-        {/* Hero Section */}
-        <motion.div 
-          className="text-center py-16"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <div className="flex justify-center mb-6">
-            <AnimatedLogo />
-          </div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-4">
-            Explora todas tus versiones
-          </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Crea espacios donde todo es posible. Lumora es la plataforma modular donde cada persona puede explorar todas sus versiones y crear espacios digitales totalmente personalizables.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              onClick={() => setShowCreateModal(true)}
-              className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Crear mi primer espacio
-            </Button>
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={() => router.push("/explore")}
-            >
-              <Sparkles className="w-5 h-5 mr-2" />
-              Explorar espacios
-            </Button>
-          </div>
-        </motion.div>
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-accent/10"></div>
+        <div className="relative max-w-7xl mx-auto px-6 py-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center space-y-8"
+          >
+            <div className="flex justify-center mb-8">
+              <AnimatedLogo className="h-16 w-16" />
+            </div>
+            
+            <div className="space-y-4">
+              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+                Bienvenido a Lumora
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                Descubre comunidades únicas, conecta con personas afines y explora nuevos horizontes 
+                en nuestra plataforma social multidimensional.
+              </p>
+            </div>
 
-        {/* Features Section */}
-        <motion.div 
-          className="py-16"
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                onClick={() => router.push('/explore')}
+              >
+                <Compass className="h-5 w-5 mr-2" />
+                Explorar Espacios
+                <ArrowRight className="h-5 w-5 ml-2" />
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="lg"
+                onClick={() => setShowCreateModal(true)}
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Crear Espacio
+                <Sparkles className="h-5 w-5 ml-2" />
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Debug Panel */}
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <DebugPanel />
+      </div>
+
+      {/* Featured Spaces Section */}
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
+          className="space-y-8"
         >
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Los tres pilares de Lumora
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center mb-4">
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle>Multiperfil</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Cada usuario puede tener diferentes personalidades/facetas dentro de un mismo perfil. Control total de visibilidad.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-lg bg-purple-500 flex items-center justify-center mb-4">
-                  <Heart className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle>Espacios Vivos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Comunidades, diarios, tiendas, salones, clubs de fans, proyectos colaborativos. Más dinámicos que Discord.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-lg bg-green-500 flex items-center justify-center mb-4">
-                  <Briefcase className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle>Modularidad Total</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  El usuario decide qué funciones activar. Feed cruzado, publicaciones multiformato, herramientas Pro.
-                </p>
-              </CardContent>
-            </Card>
+          <div className="text-center space-y-4">
+            <h2 className="text-3xl font-bold">Espacios Destacados</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Únete a comunidades vibrantes donde la creatividad y la colaboración cobran vida.
+            </p>
           </div>
-        </motion.div>
 
-        {/* Featured Spaces */}
-        <motion.div 
-          className="py-16"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        >
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold">Espacios destacados</h2>
-            <Button variant="outline" onClick={() => router.push("/explore")}>
-              Ver todos
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {featuredSpaces.map((space) => (
-              <Card 
-                key={space.id} 
-                className="cursor-pointer hover:shadow-lg transition-all border-border/50 bg-card/50 backdrop-blur-sm"
-                onClick={() => router.push(`/spaces/${space.id}`)}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${space.color} text-white`}>
-                      <space.icon className="w-6 h-6" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold mb-2">{space.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-3">{space.description}</p>
-                      <div className="flex items-center justify-between">
-                        <Badge variant="secondary">
-                          {space.memberCount} miembros
-                        </Badge>
-                        <Badge variant="outline">
-                          {space.type === 'community' ? 'Comunidad' : 
-                           space.type === 'fanclub' ? 'Club de Fans' : 'Galería'}
-                        </Badge>
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i} className="border-border/50 bg-card/50 backdrop-blur-sm">
+                  <CardContent className="p-6">
+                    <div className="animate-pulse space-y-4">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 bg-muted rounded-lg"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-muted rounded w-3/4"></div>
+                          <div className="h-3 bg-muted rounded w-full"></div>
+                          <div className="h-3 bg-muted rounded w-2/3"></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-red-500 text-2xl">⚠️</span>
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Error cargando espacios</h3>
+              <p className="text-muted-foreground mb-4">{error}</p>
+              <Button onClick={() => window.location.reload()}>
+                Reintentar
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredSpaces.map((space) => {
+                const categoryInfo = getCategoryInfo(space.category)
+                const CategoryIcon = categoryInfo.icon
+                
+                return (
+                  <Card 
+                    key={space.id} 
+                    className="cursor-pointer hover:shadow-lg transition-all border-border/50 bg-card/50 backdrop-blur-sm"
+                    onClick={() => router.push(`/spaces/${space.id}`)}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${categoryInfo.color} text-white`}>
+                          <CategoryIcon className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold mb-2">{space.name}</h3>
+                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                            {space.description}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <Badge variant="secondary">
+                              {space.memberCount?.toLocaleString() || 0} miembros
+                            </Badge>
+                            <Badge variant="outline">
+                              {categoryInfo.label}
+                            </Badge>
+                          </div>
+                          {space.tags && space.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {space.tags.slice(0, 2).map((tag) => (
+                                <Badge key={tag} variant="secondary" className="text-xs">
+                                  #{tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          )}
+
+          {!loading && spaces.length === 0 && (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">No hay espacios disponibles</h3>
+              <p className="text-muted-foreground mb-4">Sé el primero en crear un espacio y comenzar una comunidad.</p>
+              <Button onClick={() => setShowCreateModal(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Crear Primer Espacio
+              </Button>
+            </div>
+          )}
         </motion.div>
       </div>
 
