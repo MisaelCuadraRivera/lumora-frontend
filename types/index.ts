@@ -574,3 +574,20 @@ export interface KanbanBoard {
   columns: TaskColumn[]
   tasks: Record<string, Task>
 }
+
+// NOTIFICATIONS TYPES
+export interface Notification {
+  id: string
+  userId: string
+  type: "like" | "comment" | "follow" | "mention" | "space_invite" | "task_assignment" | "event_reminder" | "marketplace_purchase" | "space_join"
+  title: string
+  message: string
+  read: boolean
+  createdAt: Date
+  actionUrl?: string
+  actor?: {
+    id: string
+    name: string
+    avatar?: string
+  }
+}

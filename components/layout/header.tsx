@@ -152,7 +152,7 @@ export function Header() {
                             router.push(`/user/${user.username}`)
                             setIsSearchOpen(false)
                           }}
-                          className="flex items-center gap-3 p-3"
+                          className="flex items-center gap-3 p-3 cursor-pointer hover:bg-accent/80 transition-colors"
                         >
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={user.avatar} />
@@ -176,7 +176,7 @@ export function Header() {
                             router.push(`/spaces/${space.id}`)
                             setIsSearchOpen(false)
                           }}
-                          className="flex items-center gap-3 p-3"
+                          className="flex items-center gap-3 p-3 cursor-pointer hover:bg-accent/80 transition-colors"
                         >
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={space.image} />
@@ -203,7 +203,7 @@ export function Header() {
                             router.push(`/post/${post.id}`)
                             setIsSearchOpen(false)
                           }}
-                          className="flex items-center gap-3 p-3"
+                          className="flex items-center gap-3 p-3 cursor-pointer hover:bg-accent/80 transition-colors"
                         >
                           <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                             <FileText className="h-4 w-4 text-primary" />
@@ -228,7 +228,7 @@ export function Header() {
                           router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
                           setIsSearchOpen(false)
                         }}
-                        className="flex items-center gap-3 p-3"
+                        className="flex items-center gap-3 p-3 cursor-pointer hover:bg-accent/80 transition-colors"
                       >
                         <Search className="h-4 w-4" />
                         <span>Ver todos los resultados para "{searchQuery}"</span>
@@ -245,7 +245,7 @@ export function Header() {
               type="button"
               variant="ghost"
               size="sm"
-              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 cursor-pointer hover:bg-accent transition-colors"
               onClick={() => setSearchQuery('')}
             >
               <X className="h-3 w-3" />
@@ -260,14 +260,14 @@ export function Header() {
         <NotificationDropdown />
 
         {/* Settings */}
-        <Button variant="ghost" size="sm" onClick={() => router.push('/settings')}>
+        <Button variant="ghost" size="sm" onClick={() => router.push('/settings')} className="cursor-pointer hover:bg-accent transition-colors">
           <Settings className="h-5 w-5" />
         </Button>
 
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full cursor-pointer hover:bg-accent transition-colors">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={user?.avatar || '/placeholder.svg'} />
                 <AvatarFallback className="bg-primary text-primary-foreground">
@@ -284,20 +284,20 @@ export function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push('/profile')}> 
+            <DropdownMenuItem onClick={() => router.push('/profile')} className="cursor-pointer hover:bg-accent/80 transition-colors"> 
               <User className="mr-2 h-4 w-4" />
               <span>Mi Perfil</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push('/profile/facets')}> 
+            <DropdownMenuItem onClick={() => router.push('/profile/facets')} className="cursor-pointer hover:bg-accent/80 transition-colors"> 
               <Palette className="mr-2 h-4 w-4" />
               <span>Gestionar Facetas</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push('/settings')}> 
+            <DropdownMenuItem onClick={() => router.push('/settings')} className="cursor-pointer hover:bg-accent/80 transition-colors"> 
               <Settings className="mr-2 h-4 w-4" />
               <span>Configuración</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer hover:bg-destructive/10 hover:text-destructive transition-colors">
               <LogOut className="mr-2 h-4 w-4" />
               <span>Cerrar Sesión</span>
             </DropdownMenuItem>

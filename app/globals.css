@@ -17,8 +17,8 @@
   --secondary-foreground: #302674; /* Royal Purple */
   --muted: #E4E0FE; /* Periwinkle */
   --muted-foreground: #302674; /* Royal Purple */
-  --accent: #6C4EFE; /* Purple Heart */
-  --accent-foreground: #FDFDFD; /* Blanco */
+  --accent: #E4E0FE; /* Periwinkle - fondo suave, igual que sidebar-accent en modo claro */
+  --accent-foreground: #302674; /* Royal Purple - igual que sidebar-accent-foreground en modo claro */
   --highlight: #1DA0F9; /* Cyan para énfasis y focus */
   --highlight-foreground: #FDFDFD; /* Blanco */
   --destructive: #ef4444; /* Rojo para destructivo */
@@ -55,8 +55,8 @@
   --secondary-foreground: #E4E0FE; /* Periwinkle */
   --muted: #302674; /* Royal Purple */
   --muted-foreground: #E4E0FE; /* Periwinkle */
-  --accent: #E4E0FE; /* Periwinkle */
-  --accent-foreground: #0D0B22; /* Negro */
+  --accent: #302674; /* Royal Purple - igual que sidebar-accent en modo oscuro */
+  --accent-foreground: #E4E0FE; /* Periwinkle - igual que sidebar-accent-foreground en modo oscuro */
   --highlight: #1DA0F9; /* Cyan para énfasis y focus */
   --highlight-foreground: #0D0B22; /* Negro para mejor contraste */
   --destructive: #ef4444; /* Rojo para destructivo */
@@ -195,6 +195,92 @@
 
   .focus\:ring-highlight:focus {
     --tw-ring-color: var(--highlight);
+  }
+
+  /* Mejoras para dropdown y menu items - replicando el hover de sidebar */
+  .dropdown-menu-item:hover svg,
+  .dropdown-menu-item:focus svg,
+  .context-menu-item:hover svg,
+  .context-menu-item:focus svg,
+  .menubar-item:hover svg,
+  .menubar-item:focus svg {
+    color: var(--sidebar-accent-foreground) !important;
+  }
+
+  /* Clases utilitarias para items de menu con mejor contraste */
+  .menu-item-enhanced {
+    transition: colors 0.2s ease-in-out;
+  }
+
+  .menu-item-enhanced:hover,
+  .menu-item-enhanced:focus {
+    background-color: var(--sidebar-accent);
+    color: var(--sidebar-accent-foreground);
+  }
+
+  .menu-item-enhanced:hover svg,
+  .menu-item-enhanced:focus svg {
+    color: var(--sidebar-accent-foreground) !important;
+  }
+
+  /* Estados específicos para modo oscuro */
+  .dark .menu-item-enhanced:hover,
+  .dark .menu-item-enhanced:focus {
+    background-color: var(--sidebar-accent);
+    color: var(--sidebar-accent-foreground);
+  }
+
+  .dark .menu-item-enhanced:hover svg,
+  .dark .menu-item-enhanced:focus svg {
+    color: var(--sidebar-accent-foreground) !important;
+  }
+
+  /* Hover states mejorados para replicar el comportamiento de sidebar */
+  .hover\:bg-accent:hover {
+    background-color: var(--sidebar-accent);
+    color: var(--sidebar-accent-foreground);
+  }
+
+  .hover\:bg-accent:hover svg {
+    color: var(--sidebar-accent-foreground) !important;
+  }
+
+  /* Focus states mejorados */
+  .focus\:bg-accent:focus {
+    background-color: var(--sidebar-accent);
+    color: var(--sidebar-accent-foreground);
+  }
+
+  .focus\:bg-accent:focus svg {
+    color: var(--sidebar-accent-foreground) !important;
+  }
+
+  /* Estilos específicos para dropdown menu items - replicando sidebar */
+  [data-slot="dropdown-menu-item"]:hover,
+  [data-slot="dropdown-menu-item"]:focus {
+    background-color: var(--sidebar-accent) !important;
+    color: var(--sidebar-accent-foreground) !important;
+  }
+
+  [data-slot="dropdown-menu-item"]:hover svg,
+  [data-slot="dropdown-menu-item"]:focus svg {
+    color: var(--sidebar-accent-foreground) !important;
+  }
+
+  /* Estilos para context menu y menubar items también */
+  [data-slot="context-menu-item"]:hover,
+  [data-slot="context-menu-item"]:focus,
+  [data-slot="menubar-item"]:hover,
+  [data-slot="menubar-item"]:focus {
+    background-color: var(--sidebar-accent) !important;
+    color: var(--sidebar-accent-foreground) !important;
+  }
+
+  [data-slot="context-menu-item"]:hover svg,
+  [data-slot="context-menu-item"]:focus svg,
+  [data-slot="menubar-item"]:hover svg,
+  [data-slot="menubar-item"]:focus svg {
+    color: var(--sidebar-accent-foreground) !important;
   }
 
   /* Animaciones espaciales */
