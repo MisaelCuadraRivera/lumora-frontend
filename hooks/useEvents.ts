@@ -55,10 +55,15 @@ export function useEvents() {
 
   const createEvent = useCallback(async (eventData: any) => {
     try {
+      console.log('Creating event with data:', eventData)
       const response = await apiService.createEvent(eventData)
+      console.log('Create event response:', response)
+      
       if (response.success) {
+        console.log('Event created successfully, reloading events...')
         // Recargar eventos después de crear uno nuevo
         await loadEvents()
+        console.log('Events reloaded after creation')
         return response
       } else {
         throw new Error(response.message || 'Error creando evento')

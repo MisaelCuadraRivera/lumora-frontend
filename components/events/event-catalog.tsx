@@ -28,7 +28,8 @@ import {
   Sparkles,
   Globe,
   Monitor,
-  Smartphone
+  Smartphone,
+  RefreshCw
 } from "lucide-react"
 import { useAuth } from "@/lib/auth"
 import { useToast } from "@/hooks/use-toast"
@@ -38,6 +39,9 @@ import { EventFilters } from "./event-filters"
 import { EventCalendar } from "./event-calendar"
 import { LiveEventsBanner } from "./live-events-banner"
 import { CreateEventModal } from "./create-event-modal"
+import { SimpleCreateEventModal } from "./simple-create-event-modal"
+import { MinimalCreateEventModal } from "./minimal-create-event-modal"
+import { CompleteCreateEventModal } from "./complete-create-event-modal"
 
 interface EventCatalogProps {
   spaceId?: string
@@ -64,6 +68,16 @@ export function EventCatalog({ spaceId, organizerId, categoryId }: EventCatalogP
     minRating: 0,
     tags: [] as string[]
   })
+
+  // Función para recargar eventos
+  const handleRefreshEvents = async () => {
+    console.log('Manually refreshing events...')
+    if (spaceId) {
+      await getSpaceEvents(spaceId)
+    } else {
+      await loadEvents()
+    }
+  }
 
   // Categorías de eventos del backend
   const eventCategories = [
@@ -341,12 +355,23 @@ export function EventCatalog({ spaceId, organizerId, categoryId }: EventCatalogP
             </Button>
           </div>
 
-          <CreateEventModal spaceId={spaceId}>
-            <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90">
-              <Plus className="w-4 h-4 mr-2" />
-              Crear Evento
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleRefreshEvents}
+              disabled={loading}
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Recargar
             </Button>
-          </CreateEventModal>
+            
+            <CompleteCreateEventModal spaceId={spaceId}>
+              <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90">
+                <Plus className="w-4 h-4 mr-2" />
+                Crear Evento
+              </Button>
+            </CompleteCreateEventModal>
+          </div>
         </div>
       </div>
 

@@ -41,6 +41,9 @@ const eventCategories = [
 export function CreateEventModal({ children, isOpen, onClose, spaceId }: CreateEventModalProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  // Debug: Log cuando el modal se abre
+  console.log('CreateEventModal render:', { open, isOpen, children: !!children })
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -116,6 +119,15 @@ export function CreateEventModal({ children, isOpen, onClose, spaceId }: CreateE
   }
 
   const modalOpen = isOpen !== undefined ? isOpen : open
+
+  const handleOpenChange = (newOpen: boolean) => {
+    console.log('Modal open change:', newOpen)
+    if (onClose && !newOpen) {
+      onClose()
+    } else if (isOpen === undefined) {
+      setOpen(newOpen)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -274,7 +286,7 @@ export function CreateEventModal({ children, isOpen, onClose, spaceId }: CreateE
   const selectedCategory = eventCategories.find(cat => cat.value === formData.category)
 
   return (
-    <Dialog open={modalOpen} onOpenChange={handleClose}>
+    <Dialog open={modalOpen} onOpenChange={handleOpenChange}>
       {children && (
         <DialogTrigger asChild>
           {children}

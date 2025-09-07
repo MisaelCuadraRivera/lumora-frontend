@@ -48,7 +48,10 @@ export default function EventDetailPage() {
     const loadEvent = async () => {
       try {
         setLoading(true)
-        const response = await apiService.getEventById(eventId)
+        
+        // Usar directamente el método que no incrementa vistas para evitar el error
+        console.log('Loading event without incrementing views to avoid viewsCount error')
+        const response = await apiService.getEventByIdWithoutIncrement(eventId)
         
         if (response.success && response.data) {
           setEvent(response.data)
@@ -65,40 +68,7 @@ export default function EventDetailPage() {
         }
       } catch (err: any) {
         console.error('Error loading event:', err)
-        
-        // Manejar error específico de viewsCount
-        if (err.message && err.message.includes('viewsCount')) {
-          console.warn('Backend error: viewsCount field does not exist. Using fallback method.')
-          
-          // Mostrar notificación al usuario
-          toast({
-            title: "Información",
-            description: "El evento se está cargando usando un método alternativo debido a un problema en el backend.",
-            variant: "default"
-          })
-          
-          // Intentar cargar el evento sin incrementar vistas
-          try {
-            const fallbackResponse = await apiService.getEventByIdWithoutIncrement(eventId)
-            if (fallbackResponse.success && fallbackResponse.data) {
-              setEvent(fallbackResponse.data)
-              
-              // Verificar si el usuario está registrado
-              if (user && fallbackResponse.data.attendees) {
-                const userAttendance = fallbackResponse.data.attendees.find(
-                  (attendee: any) => attendee.userId === user.id
-                )
-                setIsAttending(!!userAttendance)
-              }
-            } else {
-              setError('Evento no encontrado')
-            }
-          } catch (fallbackErr: any) {
-            setError(fallbackErr.message || 'Error cargando evento')
-          }
-        } else {
-          setError(err.message || 'Error cargando evento')
-        }
+        setError(err.message || 'Error cargando evento')
       } finally {
         setLoading(false)
       }
