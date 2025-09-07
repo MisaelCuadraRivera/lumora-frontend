@@ -4,75 +4,79 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  /* Lumora Light Theme - Paleta de colores actualizada */
+  --background: #FDFDFD; /* Blanco */
+  --foreground: #0D0B22; /* Negro */
+  --card: #FDFDFD; /* Blanco */
+  --card-foreground: #0D0B22; /* Negro */
+  --popover: #FDFDFD; /* Blanco */
+  --popover-foreground: #0D0B22; /* Negro */
+  --primary: #6C4EFE; /* Purple Heart */
+  --primary-foreground: #FDFDFD; /* Blanco */
+  --secondary: #E4E0FE; /* Periwinkle */
+  --secondary-foreground: #302674; /* Royal Purple */
+  --muted: #E4E0FE; /* Periwinkle */
+  --muted-foreground: #302674; /* Royal Purple */
+  --accent: #6C4EFE; /* Purple Heart */
+  --accent-foreground: #FDFDFD; /* Blanco */
+  --highlight: #1DA0F9; /* Cyan para énfasis y focus */
+  --highlight-foreground: #FDFDFD; /* Blanco */
+  --destructive: #ef4444; /* Rojo para destructivo */
+  --destructive-foreground: #FDFDFD; /* Blanco */
+  --border: #E4E0FE; /* Periwinkle */
+  --input: #E4E0FE; /* Periwinkle */
+  --ring: #1DA0F9; /* Cyan para focus ring */
+  --chart-1: #6C4EFE; /* Purple Heart */
+  --chart-2: #302674; /* Royal Purple */
+  --chart-3: #E4E0FE; /* Periwinkle */
+  --chart-4: #0D0B22; /* Negro */
+  --chart-5: #FDFDFD; /* Blanco */
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #FDFDFD; /* Blanco */
+  --sidebar-foreground: #0D0B22; /* Negro */
+  --sidebar-primary: #6C4EFE; /* Purple Heart */
+  --sidebar-primary-foreground: #FDFDFD; /* Blanco */
+  --sidebar-accent: #E4E0FE; /* Periwinkle */
+  --sidebar-accent-foreground: #302674; /* Royal Purple */
+  --sidebar-border: #E4E0FE; /* Periwinkle */
+  --sidebar-ring: #1DA0F9; /* Cyan para focus */
 }
 
 .dark {
-  /* Updated dark theme colors to match Lumora's purple/cyan aesthetic */
-  --background: oklch(0.08 0.02 270);
-  --foreground: oklch(0.98 0.01 270);
-  --card: oklch(0.12 0.03 270);
-  --card-foreground: oklch(0.98 0.01 270);
-  --popover: oklch(0.12 0.03 270);
-  --popover-foreground: oklch(0.98 0.01 270);
-  --primary: oklch(0.65 0.25 270);
-  --primary-foreground: oklch(0.98 0.01 270);
-  --secondary: oklch(0.18 0.04 270);
-  --secondary-foreground: oklch(0.98 0.01 270);
-  --muted: oklch(0.15 0.03 270);
-  --muted-foreground: oklch(0.65 0.02 270);
-  --accent: oklch(0.293 0.11 288.14); /* #302674 */
-  --accent-foreground: oklch(0.98 0.01 270);
-  --destructive: oklch(0.55 0.25 15);
-  --destructive-foreground: oklch(0.98 0.01 270);
-  --border: oklch(0.18 0.04 270);
-  --input: oklch(0.18 0.04 270);
-  --ring: oklch(0.65 0.25 270);
-  --chart-1: oklch(0.65 0.25 270);
-  --chart-2: oklch(0.55 0.25 190);
-  --chart-3: oklch(0.45 0.2 300);
-  --chart-4: oklch(0.75 0.15 180);
-  --chart-5: oklch(0.85 0.1 60);
-  --sidebar: oklch(0.1 0.02 270);
-  --sidebar-foreground: oklch(0.98 0.01 270);
-  --sidebar-primary: oklch(0.65 0.25 270);
-  --sidebar-primary-foreground: oklch(0.98 0.01 270);
-  --sidebar-accent: oklch(0.15 0.03 270);
-  --sidebar-accent-foreground: oklch(0.98 0.01 270);
-  --sidebar-border: oklch(0.18 0.04 270);
-  --sidebar-ring: oklch(0.65 0.25 270);
+  --background: #0D0B22; /* Negro/Muy oscuro */
+  --foreground: #FDFDFD; /* Blanco */
+  --card: #302674; /* Royal Purple */
+  --card-foreground: #FDFDFD; /* Blanco */
+  --popover: #302674; /* Royal Purple */
+  --popover-foreground: #FDFDFD; /* Blanco */
+  --primary: #6C4EFE; /* Purple Heart */
+  --primary-foreground: #FDFDFD; /* Blanco */
+  --secondary: #302674; /* Royal Purple */
+  --secondary-foreground: #E4E0FE; /* Periwinkle */
+  --muted: #302674; /* Royal Purple */
+  --muted-foreground: #E4E0FE; /* Periwinkle */
+  --accent: #E4E0FE; /* Periwinkle */
+  --accent-foreground: #0D0B22; /* Negro */
+  --highlight: #1DA0F9; /* Cyan para énfasis y focus */
+  --highlight-foreground: #0D0B22; /* Negro para mejor contraste */
+  --destructive: #ef4444; /* Rojo para destructivo */
+  --destructive-foreground: #FDFDFD; /* Blanco */
+  --border: #302674; /* Royal Purple */
+  --input: #302674; /* Royal Purple */
+  --ring: #1DA0F9; /* Cyan para focus ring */
+  --chart-1: #6C4EFE; /* Purple Heart */
+  --chart-2: #E4E0FE; /* Periwinkle */
+  --chart-3: #302674; /* Royal Purple */
+  --chart-4: #FDFDFD; /* Blanco */
+  --chart-5: #0D0B22; /* Negro */
+  --sidebar: #0D0B22; /* Negro */
+  --sidebar-foreground: #FDFDFD; /* Blanco */
+  --sidebar-primary: #6C4EFE; /* Purple Heart */
+  --sidebar-primary-foreground: #FDFDFD; /* Blanco */
+  --sidebar-accent: #302674; /* Royal Purple */
+  --sidebar-accent-foreground: #E4E0FE; /* Periwinkle */
+  --sidebar-border: #302674; /* Royal Purple */
+  --sidebar-ring: #1DA0F9; /* Cyan para focus */
 }
 
 @theme inline {
@@ -92,6 +96,8 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
@@ -125,11 +131,11 @@
   }
 }
 
-/* Added custom scrollbar styling for Lumora */
+/* Custom scrollbar styling for Lumora con la nueva paleta */
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: oklch(0.35 0.15 270) transparent;
+    scrollbar-color: #6C4EFE transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -141,11 +147,119 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: oklch(0.35 0.15 270);
+    background-color: #6C4EFE;
     border-radius: 3px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: oklch(0.45 0.2 270);
+    background-color: #302674;
+  }
+
+  /* Estilos para el color highlight/énfasis */
+  .text-highlight {
+    color: var(--highlight);
+  }
+
+  .bg-highlight {
+    background-color: var(--highlight);
+    color: var(--highlight-foreground);
+  }
+
+  .border-highlight {
+    border-color: var(--highlight);
+  }
+
+  .ring-highlight {
+    --tw-ring-color: var(--highlight);
+  }
+
+  /* Gradiente púrpura a cyan para botones especiales */
+  .bg-gradient-primary-highlight {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--highlight) 100%);
+    color: var(--primary-foreground);
+  }
+
+  .bg-gradient-highlight-primary {
+    background: linear-gradient(135deg, var(--highlight) 0%, var(--primary) 100%);
+    color: var(--primary-foreground);
+  }
+
+  /* Estados hover con highlight */
+  .hover\:text-highlight:hover {
+    color: var(--highlight);
+  }
+
+  .hover\:border-highlight:hover {
+    border-color: var(--highlight);
+  }
+
+  .focus\:ring-highlight:focus {
+    --tw-ring-color: var(--highlight);
+  }
+
+  /* Animaciones espaciales */
+  @keyframes twinkle {
+    0%, 100% { 
+      opacity: 0; 
+      transform: scale(0.8);
+    }
+    50% { 
+      opacity: 1; 
+      transform: scale(1.2);
+    }
+  }
+
+  @keyframes float {
+    0%, 100% { 
+      transform: translateY(0px) translateX(0px);
+    }
+    33% { 
+      transform: translateY(-20px) translateX(10px);
+    }
+    66% { 
+      transform: translateY(10px) translateX(-10px);
+    }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { 
+      box-shadow: 0 0 20px rgba(108, 78, 254, 0.3);
+      opacity: 0.6;
+    }
+    50% { 
+      box-shadow: 0 0 40px rgba(108, 78, 254, 0.6);
+      opacity: 0.9;
+    }
+  }
+
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 6s ease-in-out infinite;
+  }
+
+  .star-small {
+    width: 2px;
+    height: 2px;
+  }
+
+  .star-medium {
+    width: 3px;
+    height: 3px;
+    animation-duration: 8s;
+  }
+
+  .star-large {
+    width: 4px;
+    height: 4px;
+    animation-duration: 10s;
+  }
+
+  .nebula {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(2px);
+    animation: float 10s ease-in-out infinite;
   }
 }
