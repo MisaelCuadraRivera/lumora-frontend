@@ -141,3 +141,11 @@ export const markNotificationAsRead = (notificationId: string): void => {
     notification.read = true
   }
 }
+
+export const markAllAsRead = (userId: string): void => {
+  mockNotifications.forEach((notification) => {
+    if (notification.userId === userId) {
+      notification.read = true;
+    }
+  });
+};

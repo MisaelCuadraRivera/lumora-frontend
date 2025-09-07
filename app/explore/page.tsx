@@ -73,7 +73,7 @@ export default function ExplorePage() {
           </TabsTrigger>
           <TabsTrigger value="active" className="gap-2">
             <Users className="h-4 w-4" />
-            Más Activos
+            Más activos
           </TabsTrigger>
           <TabsTrigger value="new" className="gap-2">
             <Calendar className="h-4 w-4" />
@@ -121,14 +121,14 @@ export default function ExplorePage() {
               <Plus className="h-12 w-12 text-primary" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold mb-2">Crear tu Propio Espacio</h2>
+              <h2 className="text-2xl font-bold mb-2">Crear tu propio espacio</h2>
               <p className="text-muted-foreground">
                 ¿Tienes una pasión que quieres compartir? Crea tu propia comunidad y conecta con personas afines.
               </p>
             </div>
             <Button size="lg">
               <Plus className="h-5 w-5 mr-2" />
-              Crear Espacio
+              Crear espacio
             </Button>
           </div>
         </TabsContent>
