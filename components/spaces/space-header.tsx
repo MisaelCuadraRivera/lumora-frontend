@@ -5,8 +5,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Space } from "@/types"
-import { Users, UserPlus, UserCheck, Share, Settings, TrendingUp } from "lucide-react"
+import { Users, UserPlus, UserCheck, Share, Settings, TrendingUp, ListChecks } from "lucide-react"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 interface SpaceHeaderProps {
   space: Space
@@ -17,6 +18,7 @@ interface SpaceHeaderProps {
 
 export function SpaceHeader({ space, isOwner = false, onJoin, onLeave }: SpaceHeaderProps) {
   const [isJoined, setIsJoined] = useState(space.isJoined)
+  const router = useRouter()
 
   const handleToggleJoin = () => {
     if (isJoined) {
@@ -80,6 +82,10 @@ export function SpaceHeader({ space, isOwner = false, onJoin, onLeave }: SpaceHe
               <Button variant="ghost" size="sm">
                 <Share className="h-4 w-4 mr-2" />
                 Compartir
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => router.push(`/spaces/${space.id}/tasks`)}>
+                <ListChecks className="h-4 w-4 mr-2" />
+                Tareas
               </Button>
               {isOwner ? (
                 <Button>

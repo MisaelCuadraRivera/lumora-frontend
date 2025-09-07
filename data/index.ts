@@ -37,6 +37,7 @@ import {
   getLiveEvents,
   getEventAnalytics
 } from "./events"
+import { mockKanbanBoard, getBoardBySpace, getTasksByStatus, getTask } from "./tasks"
 import type { VoiceChannel, VideoCall, ChatRole, ChatNotification, Message, ChatSearchResult } from "@/types"
 
 // Re-export all data
@@ -97,6 +98,11 @@ export {
   getUpcomingEvents,
   getLiveEvents,
   getEventAnalytics,
+  // Tasks exports
+  mockKanbanBoard,
+  getBoardBySpace,
+  getTasksByStatus,
+  getTask,
 }
 
 // Utility functions for data manipulation

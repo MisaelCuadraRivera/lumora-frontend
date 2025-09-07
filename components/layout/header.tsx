@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu'
 import {
   Command,
   CommandEmpty,
@@ -21,24 +21,24 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
+} from '@/components/ui/command'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { useAuth } from "@/lib/auth"
-import { getUnreadNotifications, mockUsers, mockSpaces, mockPosts } from "@/data"
-import { Search, Bell, Settings, LogOut, User, Palette, Hash, Users, FileText, X } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { LumoraLogo } from "@/components/ui/lumora-logo"
+} from '@/components/ui/popover'
+import { useAuth } from '@/lib/auth'
+import { mockUsers, mockSpaces, mockPosts } from '@/data'
+import { Search, Settings, LogOut, User, Palette, Hash, Users, FileText, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { LumoraLogo } from '@/components/ui/lumora-logo'
+import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
 
 export function Header() {
-  const [searchQuery, setSearchQuery] = useState("")
+  const [searchQuery, setSearchQuery] = useState('')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const { user, logout } = useAuth()
   const router = useRouter()
-  const unreadCount = user ? getUnreadNotifications(user.id).length : 0
   const searchRef = useRef<HTMLDivElement>(null)
 
   // Close search on click outside
@@ -49,8 +49,8 @@ export function Header() {
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   const handleSearch = (e: React.FormEvent) => {
@@ -63,7 +63,7 @@ export function Header() {
 
   const handleLogout = () => {
     logout()
-    router.push("/login")
+    router.push('/login')
   }
 
   // Search results
@@ -138,7 +138,7 @@ export function Header() {
                   {searchQuery && !hasResults && (
                     <CommandEmpty>
                       <div className="p-4 text-center text-sm text-muted-foreground">
-                        No se encontraron resultados para {`"${searchQuery}"`}
+                        No se encontraron resultados para "{searchQuery}"
                       </div>
                     </CommandEmpty>
                   )}
@@ -231,7 +231,7 @@ export function Header() {
                         className="flex items-center gap-3 p-3"
                       >
                         <Search className="h-4 w-4" />
-                        <span>Ver todos los resultados para {`"${searchQuery}"`}</span>
+                        <span>Ver todos los resultados para "{searchQuery}"</span>
                       </CommandItem>
                     </CommandGroup>
                   )}
@@ -246,7 +246,7 @@ export function Header() {
               variant="ghost"
               size="sm"
               className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
-              onClick={() => setSearchQuery("")}
+              onClick={() => setSearchQuery('')}
             >
               <X className="h-3 w-3" />
             </Button>
@@ -257,20 +257,10 @@ export function Header() {
       {/* Actions */}
       <div className="flex items-center gap-2">
         {/* Notifications */}
-        <Button variant="ghost" size="sm" className="relative" onClick={() => router.push("/notifications")}>
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <Badge
-              variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
-            >
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </Badge>
-          )}
-        </Button>
+        <NotificationDropdown />
 
         {/* Settings */}
-        <Button variant="ghost" size="sm" onClick={() => router.push("/settings")}>
+        <Button variant="ghost" size="sm" onClick={() => router.push('/settings')}>
           <Settings className="h-5 w-5" />
         </Button>
 
@@ -279,7 +269,7 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.avatar || "/placeholder.svg"} />
+                <AvatarImage src={user?.avatar || '/placeholder.svg'} />
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   {user?.username?.charAt(0).toUpperCase()}
                 </AvatarFallback>
@@ -294,15 +284,15 @@ export function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push("/profile")}> 
+            <DropdownMenuItem onClick={() => router.push('/profile')}> 
               <User className="mr-2 h-4 w-4" />
               <span>Mi Perfil</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/profile/facets")}>
+            <DropdownMenuItem onClick={() => router.push('/profile/facets')}> 
               <Palette className="mr-2 h-4 w-4" />
               <span>Gestionar Facetas</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/settings")}>
+            <DropdownMenuItem onClick={() => router.push('/settings')}> 
               <Settings className="mr-2 h-4 w-4" />
               <span>Configuración</span>
             </DropdownMenuItem>
