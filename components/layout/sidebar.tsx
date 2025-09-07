@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { CreateSpaceModal } from "@/components/spaces/create-space-modal"
 import { useAuth } from "@/lib/auth"
-import { getJoinedSpaces, getUnreadNotifications } from "@/data"
+import { useSpaces } from "@/hooks/useSpaces"
+import { getUnreadNotifications } from "@/data"
 import { Home, User, Compass, Settings, Hash, Volume2, Plus, ChevronDown, MessageSquare, ShoppingCart, Calendar } from "lucide-react"
 
 const navigationItems = [
@@ -50,9 +51,12 @@ const navigationItems = [
 export function Sidebar() {
   const pathname = usePathname()
   const { user } = useAuth()
-  const joinedSpaces = getJoinedSpaces()
+  const { spaces } = useSpaces()
   const unreadCount = user ? getUnreadNotifications(user.id).length : 0
   const [showCreateModal, setShowCreateModal] = useState(false)
+  
+  // Filtrar espacios a los que el usuario se ha unido (por ahora mostramos todos los espacios públicos)
+  const joinedSpaces = spaces.filter(space => space.isJoined || space.isPublic)
 
   return (
     <div className="flex h-full w-60 flex-col bg-sidebar border-r border-sidebar-border">

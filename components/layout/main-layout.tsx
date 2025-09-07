@@ -7,6 +7,7 @@ import { Header } from "./header"
 import { usePathname, useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { LumoraLogo } from "@/components/ui/lumora-logo"
+import { ApiDebugPanel } from "@/components/debug/api-debug-panel"
 
 function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -71,6 +72,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
         <Sidebar />
         <main className="flex-1 overflow-auto bg-background">{children}</main>
       </div>
+      <ApiDebugPanel />
     </div>
   )
 }
