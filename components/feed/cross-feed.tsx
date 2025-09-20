@@ -29,7 +29,7 @@ import {
   Bookmark
 } from "lucide-react"
 import { PostCard } from "@/components/posts/post-card"
-import { CreatePost } from "@/components/posts/create-post"
+import { PostComposer } from "@/components/posts/post-composer"
 import { usePosts } from "@/hooks/usePosts"
 
 const feedAlgorithms = [
@@ -316,7 +316,7 @@ export function CrossFeed() {
           {/* Feed Content */}
           <div className="space-y-4">
             {/* Componente para crear posts */}
-            <CreatePost onPost={handleCreatePost} />
+            <PostComposer onPost={handleCreatePost} />
             
             <AnimatePresence>
               {posts.map((post, index) => (

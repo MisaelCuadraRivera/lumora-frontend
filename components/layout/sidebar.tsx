@@ -1,19 +1,31 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useState } from "react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { CreateSpaceModal } from "@/components/spaces/create-space-modal"
-import { useAuth } from "@/lib/auth"
-import { useSpaces } from "@/hooks/useSpaces"
-import { getUnreadNotifications } from "@/data"
-import { Home, User, Compass, Settings, Hash, Volume2, Plus, ChevronDown, MessageSquare, ShoppingCart, Calendar } from "lucide-react"
-import { ThemeToggle } from "@/components/ui/theme-toggle"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { CreateSpaceModal } from "@/components/spaces/create-space-modal";
+import { useAuth } from "@/lib/auth";
+import { useSpaces } from "@/hooks/useSpaces";
+import { getUnreadNotifications } from "@/data";
+import {
+  Home,
+  User,
+  Compass,
+  Settings,
+  Hash,
+  Volume2,
+  Plus,
+  ChevronDown,
+  MessageSquare,
+  ShoppingCart,
+  Calendar,
+} from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const navigationItems = [
   {
@@ -47,20 +59,39 @@ const navigationItems = [
     href: "/events",
     icon: Calendar,
   },
-]
+];
 
 export function Sidebar() {
-  const pathname = usePathname()
-  const { user } = useAuth()
-  const { spaces } = useSpaces()
-  const unreadCount = user ? getUnreadNotifications(user.id).length : 0
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  
+  const pathname = usePathname();
+  const { user } = useAuth();
+  const { spaces } = useSpaces();
+  const unreadCount = user ? getUnreadNotifications(user.id).length : 0;
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  // For closing sidebar on mobile navigation
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
   // Filtrar espacios a los que el usuario se ha unido (por ahora mostramos todos los espacios públicos)
-  const joinedSpaces = spaces.filter(space => space.isJoined || space.isPublic)
+  const joinedSpaces = spaces.filter(
+    (space) => space.isJoined || space.isPublic
+  );
+  // Close sidebar on navigation (mobile only, only when pathname changes)
+  const prevPath = useRef(pathname);
+  useEffect(() => {
+    if (!isMobile) return;
+    if (prevPath.current !== pathname) {
+      const evt = new CustomEvent("lumora-close-sidebar");
+      window.dispatchEvent(evt);
+      prevPath.current = pathname;
+    }
+  }, [isMobile, pathname]);
 
   return (
-    <div className="flex h-full w-60 flex-col bg-sidebar border-r border-sidebar-border">
+    <div className="flex h-full flex-col bg-sidebar border-r border-sidebar-border p-0 m-0">
       {/* User Section */}
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
@@ -71,48 +102,57 @@ export function Sidebar() {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.username}</p>
+            <p className="text-sm font-medium text-sidebar-foreground truncate">
+              {user?.username}
+            </p>
             <p className="text-xs text-sidebar-foreground/60 truncate">
-              {user?.facets.find((f) => f.isActive)?.name || "Sin faceta activa"}
+              {user?.facets.find((f) => f.isActive)?.name ||
+                "Sin faceta activa"}
             </p>
           </div>
           <ChevronDown className="h-4 w-4 text-sidebar-foreground/60" />
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 p-0 m-0">
         {/* Main Navigation */}
         <div className="p-2">
           <nav className="space-y-1">
             {navigationItems.map((item) => {
-              const isActive = pathname === item.href
+              const isActive = pathname === item.href;
               return (
                 <Link key={item.href} href={item.href}>
                   <Button
                     variant={isActive ? "secondary" : "ghost"}
                     className={cn(
                       "w-full justify-start gap-3 h-10",
-                      isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
+                      isActive &&
+                        "bg-sidebar-accent text-sidebar-accent-foreground"
                     )}
                   >
                     <item.icon className="h-5 w-5" />
                     <span>{item.name}</span>
                     {item.badge && unreadCount > 0 && (
-                      <Badge variant="destructive" className="ml-auto h-5 px-1.5 text-xs">
+                      <Badge
+                        variant="destructive"
+                        className="ml-auto h-5 px-1.5 text-xs"
+                      >
                         {unreadCount > 99 ? "99+" : unreadCount}
                       </Badge>
                     )}
                   </Button>
                 </Link>
-              )
+              );
             })}
           </nav>
         </div>
 
         {/* Spaces Section */}
-        <div className="p-2 mt-4">
+        <div className="p-2 mt-2">
           <div className="flex items-center justify-between mb-2 px-2">
-            <h3 className="text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider">Espacios</h3>
+            <h3 className="text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider">
+              Espacios
+            </h3>
             <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
               <Plus className="h-4 w-4" />
             </Button>
@@ -124,7 +164,8 @@ export function Sidebar() {
                   variant="ghost"
                   className={cn(
                     "w-full justify-start gap-3 h-8 px-2",
-                    pathname.startsWith(`/spaces/${space.id}`) && "bg-sidebar-accent text-sidebar-accent-foreground",
+                    pathname.startsWith(`/spaces/${space.id}`) &&
+                      "bg-sidebar-accent text-sidebar-accent-foreground"
                   )}
                 >
                   <Avatar className="h-5 w-5">
@@ -134,7 +175,9 @@ export function Sidebar() {
                     </AvatarFallback>
                   </Avatar>
                   <span className="text-sm truncate">{space.name}</span>
-                  {space.activeMembers > 0 && <div className="ml-auto h-2 w-2 rounded-full bg-green-500" />}
+                  {space.activeMembers > 0 && (
+                    <div className="ml-auto h-2 w-2 rounded-full bg-green-500" />
+                  )}
                 </Button>
               </Link>
             ))}
@@ -155,39 +198,61 @@ export function Sidebar() {
                   variant="ghost"
                   className={cn(
                     "w-full justify-start gap-3 h-8 px-2 text-sidebar-foreground/80",
-                    pathname.includes("/chat") && "bg-sidebar-accent text-sidebar-accent-foreground",
+                    pathname.includes("/chat") &&
+                      "bg-sidebar-accent text-sidebar-accent-foreground"
                   )}
                 >
                   <Hash className="h-4 w-4" />
                   <span className="text-sm">general</span>
-                  <Badge variant="secondary" className="ml-auto h-4 px-1 text-xs">
+                  <Badge
+                    variant="secondary"
+                    className="ml-auto h-4 px-1 text-xs"
+                  >
                     128
                   </Badge>
                 </Button>
               </Link>
               <Link href="/spaces/cosmolectores/chat">
-                <Button variant="ghost" className="w-full justify-start gap-3 h-8 px-2 text-sidebar-foreground/80">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3 h-8 px-2 text-sidebar-foreground/80"
+                >
                   <Hash className="h-4 w-4" />
                   <span className="text-sm">anuncios</span>
-                  <Badge variant="secondary" className="ml-auto h-4 px-1 text-xs">
+                  <Badge
+                    variant="secondary"
+                    className="ml-auto h-4 px-1 text-xs"
+                  >
                     4
                   </Badge>
                 </Button>
               </Link>
               <Link href="/spaces/cosmolectores/chat">
-                <Button variant="ghost" className="w-full justify-start gap-3 h-8 px-2 text-sidebar-foreground/80">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3 h-8 px-2 text-sidebar-foreground/80"
+                >
                   <Hash className="h-4 w-4" />
                   <span className="text-sm">discusión-hyperion</span>
-                  <Badge variant="secondary" className="ml-auto h-4 px-1 text-xs">
+                  <Badge
+                    variant="secondary"
+                    className="ml-auto h-4 px-1 text-xs"
+                  >
                     36
                   </Badge>
                 </Button>
               </Link>
               <Link href="/spaces/cosmolectores/chat">
-                <Button variant="ghost" className="w-full justify-start gap-3 h-8 px-2 text-sidebar-foreground/80">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3 h-8 px-2 text-sidebar-foreground/80"
+                >
                   <Hash className="h-4 w-4" />
                   <span className="text-sm">spoilers-abiertos</span>
-                  <Badge variant="secondary" className="ml-auto h-4 px-1 text-xs">
+                  <Badge
+                    variant="secondary"
+                    className="ml-auto h-4 px-1 text-xs"
+                  >
                     12
                   </Badge>
                 </Button>
@@ -200,11 +265,17 @@ export function Sidebar() {
               </h3>
             </div>
             <nav className="space-y-1">
-              <Button variant="ghost" className="w-full justify-start gap-3 h-8 px-2 text-sidebar-foreground/80">
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-3 h-8 px-2 text-sidebar-foreground/80"
+              >
                 <Volume2 className="h-4 w-4" />
                 <span className="text-sm">Sala de Lectura</span>
               </Button>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-8 px-2 text-sidebar-foreground/80">
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-3 h-8 px-2 text-sidebar-foreground/80"
+              >
                 <Volume2 className="h-4 w-4" />
                 <span className="text-sm">Debate Semanal</span>
               </Button>
@@ -212,7 +283,7 @@ export function Sidebar() {
           </div>
         )}
         {/* Create Space Button */}
-        <div className="p-2 border-t border-sidebar-border">
+        <div className="p-2 border-t border-sidebar-border mt-2">
           <Button
             onClick={() => setShowCreateModal(true)}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -224,17 +295,17 @@ export function Sidebar() {
       </ScrollArea>
 
       {/* Footer with Theme Toggle */}
-      <div className="p-2 border-t border-sidebar-border bg-sidebar">
+      <div className="p-2 border-t border-sidebar-border bg-sidebar mt-0">
         <div className="space-y-1">
           <ThemeToggle />
         </div>
       </div>
 
       {/* Create Space Modal */}
-      <CreateSpaceModal 
-        isOpen={showCreateModal} 
-        onClose={() => setShowCreateModal(false)} 
+      <CreateSpaceModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
       />
     </div>
-  )
+  );
 }

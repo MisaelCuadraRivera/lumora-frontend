@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { PostCard } from "./post-card"
-import { CreatePost } from "./create-post"
+import { PostComposer } from "./post-composer"
 import { getFeedPosts } from "@/data"
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
 import { FeedSkeleton, PostSkeleton } from "@/components/ui/skeleton-loaders"
@@ -74,7 +74,7 @@ export function PostFeed({ spaceId, showCreatePost = true, posts: externalPosts 
 
   return (
     <div className="space-y-6">
-      {showCreatePost && <CreatePost onPost={handleCreatePost} spaceId={spaceId} />}
+      {showCreatePost && <PostComposer onPost={handleCreatePost} spaceId={spaceId} />}
 
       {filteredPosts.map((post) => (
         <PostCard key={post.id} post={post} onLike={handleLike} onComment={handleComment} onShare={handleShare} />

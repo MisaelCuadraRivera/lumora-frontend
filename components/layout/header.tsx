@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { SidebarTrigger } from '@/components/ui/sidebar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -90,8 +91,9 @@ export function Header() {
 
   return (
     <div className="flex h-14 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
-      {/* Logo */}
+      {/* Logo and Sidebar Trigger */}
       <div className="flex items-center gap-4">
+        <SidebarTrigger />
         <div className="flex items-center gap-2">
           <LumoraLogo width={32} height={32} className="drop-shadow-sm" />
           <h1 className="text-xl font-bold text-foreground">
