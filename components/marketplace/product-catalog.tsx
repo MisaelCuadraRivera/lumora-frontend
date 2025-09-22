@@ -42,6 +42,8 @@ import {
 import { ProductCard } from "./product-card"
 import { ProductFilters } from "./product-filters"
 import { CartSidebar } from "./cart-sidebar"
+import { ProductDetailModal } from "./product-detail-modal"
+import type { Product } from "@/types"
 
 interface ProductCatalogProps {
   spaceId?: string
@@ -56,6 +58,8 @@ export function ProductCatalog({ spaceId, sellerId, categoryId }: ProductCatalog
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [showFilters, setShowFilters] = useState(false)
   const [showCart, setShowCart] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [showProductDetail, setShowProductDetail] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState(categoryId || "")
   const [priceRange, setPriceRange] = useState([0, 1000])
@@ -138,6 +142,16 @@ export function ProductCatalog({ spaceId, sellerId, categoryId }: ProductCatalog
   const handleLike = (productId: string) => {
     // Aquí iría la lógica para like
     console.log("Liking product:", productId)
+  }
+
+  const handleProductClick = (product: Product) => {
+    setSelectedProduct(product)
+    setShowProductDetail(true)
+  }
+
+  const handleAddToCartFromModal = (productId: string, quantity: number) => {
+    // Aquí iría la lógica para agregar al carrito con cantidad específica
+    console.log("Adding to cart:", productId, "quantity:", quantity)
   }
 
   return (
@@ -267,6 +281,7 @@ export function ProductCatalog({ spaceId, sellerId, categoryId }: ProductCatalog
                     viewMode={viewMode}
                     onAddToCart={handleAddToCart}
                     onLike={handleLike}
+                    onProductClick={handleProductClick}
                   />
                 </motion.div>
               ))}
@@ -279,6 +294,18 @@ export function ProductCatalog({ spaceId, sellerId, categoryId }: ProductCatalog
       <CartSidebar 
         isOpen={showCart} 
         onClose={() => setShowCart(false)} 
+      />
+
+      {/* Product Detail Modal */}
+      <ProductDetailModal
+        product={selectedProduct}
+        isOpen={showProductDetail}
+        onClose={() => {
+          setShowProductDetail(false)
+          setSelectedProduct(null)
+        }}
+        onAddToCart={handleAddToCartFromModal}
+        onLike={handleLike}
       />
     </div>
   )

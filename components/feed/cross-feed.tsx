@@ -29,7 +29,7 @@ import {
   Bookmark
 } from "lucide-react"
 import { PostCard } from "@/components/posts/post-card"
-import { CreatePost } from "@/components/posts/create-post"
+import { PostComposer } from "@/components/posts/post-composer"
 import { usePosts } from "@/hooks/usePosts"
 
 const feedAlgorithms = [
@@ -108,21 +108,21 @@ export function CrossFeed() {
         filteredPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         break
       case "popular":
-        filteredPosts.sort((a, b) => (b.likes + b.comments + b.shares) - (a.likes + a.comments + a.shares))
+        filteredPosts.sort((a, b) => (b.likes + b.comments.length + b.shares) - (a.likes + a.comments.length + a.shares))
         break
       case "relevant":
         // Simular relevancia basada en facetas activas
         filteredPosts.sort((a, b) => {
           const activeFacet = user?.facets?.find(f => f.isActive)
-          if (activeFacet && a.tags.includes(activeFacet.type)) return -1
+          if (activeFacet && a.tags.includes(activeFacet.category)) return -1
           return 0
         })
         break
       case "mixed":
         // Combinación de relevancia y popularidad
         filteredPosts.sort((a, b) => {
-          const relevanceScore = a.tags.includes(user?.facets?.find(f => f.isActive)?.type || "") ? 10 : 0
-          const popularityScore = (b.likes + b.comments + b.shares) * 0.1
+          const relevanceScore = a.tags.includes(user?.facets?.find(f => f.isActive)?.category || "") ? 10 : 0
+          const popularityScore = (b.likes + b.comments.length + b.shares) * 0.1
           const recencyScore = (new Date().getTime() - new Date(b.createdAt).getTime()) * 0.000001
           return (relevanceScore + popularityScore - recencyScore) - (relevanceScore + popularityScore - recencyScore)
         })
@@ -145,27 +145,27 @@ export function CrossFeed() {
       {/* Feed Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Feed Cruzado
+          <h1 className="text-3xl font-bold bg-gradient-to-r  bg-clip-text">
+            Feed
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Contenido de todas tus facetas y espacios
-          </p>
         </div>
         
         <div className="flex items-center gap-2">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
+            className="h-10 px-3 justify-start border border-input bg-background hover:bg-accent hover:text-accent-foreground"
           >
             <Filter className="w-4 h-4 mr-2" />
             Filtros
           </Button>
           
           <Select value={selectedAlgorithm} onValueChange={setSelectedAlgorithm}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
+            <SelectTrigger className="w-auto min-w-[120px]">
+              <SelectValue placeholder="Algoritmo">
+                {feedAlgorithms.find(algo => algo.id === selectedAlgorithm)?.name}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {feedAlgorithms.map((algorithm) => (
@@ -316,7 +316,7 @@ export function CrossFeed() {
           {/* Feed Content */}
           <div className="space-y-4">
             {/* Componente para crear posts */}
-            <CreatePost onPost={handleCreatePost} />
+            <PostComposer onPost={handleCreatePost} />
             
             <AnimatePresence>
               {posts.map((post, index) => (

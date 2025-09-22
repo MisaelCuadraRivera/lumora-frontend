@@ -2,8 +2,7 @@
 
 import React from "react"
 import { useAuth, AuthProvider } from "@/lib/auth"
-import { Sidebar } from "./sidebar"
-import { Header } from "./header"
+import { ResponsiveSidebarLayout } from "./responsive-sidebar-layout"
 import { usePathname, useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { LumoraLogo } from "@/components/ui/lumora-logo"
@@ -67,10 +66,10 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="h-screen flex flex-col">
-      <Header />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-auto bg-background">{children}</main>
+        <ResponsiveSidebarLayout>
+          <main className="flex-1 overflow-auto bg-background">{children}</main>
+        </ResponsiveSidebarLayout>
       </div>
       <ApiDebugPanel />
     </div>

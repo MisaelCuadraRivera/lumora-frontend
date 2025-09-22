@@ -11,7 +11,7 @@ import type { Post } from "@/types"
 import { Heart, MessageCircle, Share, MoreHorizontal, Send, ChevronDown, ChevronUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-interface PostCardProps {
+interface TwitterPostCardProps {
   post: Post
   onLike?: (postId: string) => void
   onComment?: (postId: string, content: string) => void
@@ -19,7 +19,7 @@ interface PostCardProps {
   showComments?: boolean
 }
 
-export function PostCard({ post, onLike, onComment, onShare, showComments = true }: PostCardProps) {
+export function TwitterPostCard({ post, onLike, onComment, onShare, showComments = true }: TwitterPostCardProps) {
   const [isLiked, setIsLiked] = useState(false)
   const [likesCount, setLikesCount] = useState(post.likes)
   const [showAllComments, setShowAllComments] = useState(false)
@@ -45,7 +45,7 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
     onShare?.(post.id)
   }
 
-  const visibleComments = showAllComments ? (post.comments || []) : (post.comments || []).slice(0, 2)
+  const visibleComments = showAllComments ? post.comments : post.comments.slice(0, 2)
 
   return (
     <motion.article
@@ -173,31 +173,29 @@ export function PostCard({ post, onLike, onComment, onShare, showComments = true
           )}
 
           {/* Actions Bar */}
-          <div className="flex items-center justify-between w-full -ml-2">
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "gap-2 hover:text-red-500 hover:bg-red-500/10 transition-colors text-muted-foreground rounded-full px-3 py-1.5 h-auto",
-                  isLiked && "text-red-500 bg-red-500/5"
-                )}
-                onClick={handleLike}
-              >
-                <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
-                <span className="text-sm tabular-nums">{likesCount}</span>
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-2 hover:text-blue-500 hover:bg-blue-500/10 transition-colors text-muted-foreground rounded-full px-3 py-1.5 h-auto"
-                onClick={() => setIsCommenting(!isCommenting)}
-              >
-                <MessageCircle className="h-4 w-4" />
-                <span className="text-sm tabular-nums">{post.comments.length}</span>
-              </Button>
-            </div>
+          <div className="flex items-center justify-between max-w-md -ml-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "gap-2 hover:text-red-500 hover:bg-red-500/10 transition-colors text-muted-foreground rounded-full px-3 py-1.5 h-auto",
+                isLiked && "text-red-500 bg-red-500/5"
+              )}
+              onClick={handleLike}
+            >
+              <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
+              <span className="text-sm tabular-nums">{likesCount}</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2 hover:text-blue-500 hover:bg-blue-500/10 transition-colors text-muted-foreground rounded-full px-3 py-1.5 h-auto"
+              onClick={() => setIsCommenting(!isCommenting)}
+            >
+              <MessageCircle className="h-4 w-4" />
+              <span className="text-sm tabular-nums">{post.comments.length}</span>
+            </Button>
             
             <Button
               variant="ghost"
