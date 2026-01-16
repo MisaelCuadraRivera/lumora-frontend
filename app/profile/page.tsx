@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
 import { useAuth } from "@/lib/auth"
+import { useFacets } from "@/hooks/useFacets"
 import { ProfileHeader } from "@/components/profile/profile-header"
 import { FacetCard } from "@/components/profile/facet-card"
 import { LivingSpaces } from "@/components/profile/living-spaces"
@@ -9,7 +9,7 @@ import { PostFeed } from "@/components/posts/post-feed"
 import { CreateFacetModal } from "@/components/profile/create-facet-modal"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Plus, Loader2 } from "lucide-react"
 
 const mockLivingSpaces = [
   {
@@ -40,17 +40,14 @@ const mockLivingSpaces = [
 
 export default function ProfilePage() {
   const { user } = useAuth()
-  const [selectedFacet, setSelectedFacet] = useState(user?.facets.find((f) => f.isActive)?.id || "")
-  const [userFacets, setUserFacets] = useState(user?.facets || [])
+  const { facets, loading, refreshFacets, activeFacet } = useFacets()
 
   if (!user) {
-    return <div>Cargando...</div>
-  }
-
-  const activeFacet = userFacets.find((f) => f.id === selectedFacet) || userFacets.find((f) => f.isActive)
-
-  const handleFacetCreated = (newFacet: any) => {
-    setUserFacets(prev => [...prev, newFacet])
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
   return (
@@ -60,20 +57,41 @@ export default function ProfilePage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Gestiona y muestra tus Facetas</h2>
-          <CreateFacetModal onFacetCreated={handleFacetCreated} />
+          <CreateFacetModal onSuccess={refreshFacets} />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {userFacets.map((facet) => (
-            <FacetCard
-              key={facet.id}
-              facet={facet}
-              isOwner={true}
-              onActivate={(facetId) => setSelectedFacet(facetId)}
-              onView={(facetId) => setSelectedFacet(facetId)}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : facets.length === 0 ? (
+          <div className="text-center py-12 border border-dashed rounded-lg">
+            <p className="text-muted-foreground mb-4">
+              No tienes facetas creadas aún.
+            </p>
+            <CreateFacetModal 
+              onSuccess={refreshFacets}
+              trigger={
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Crear tu primera Faceta
+                </Button>
+              }
             />
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {facets.map((facet) => (
+              <FacetCard
+                key={facet.id}
+                facet={facet}
+                isOwner={true}
+                onActivate={() => refreshFacets()}
+                onView={() => {}}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {activeFacet && (

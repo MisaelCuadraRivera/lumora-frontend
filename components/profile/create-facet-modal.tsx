@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,10 +19,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
-import { Plus, Palette, Camera, X } from "lucide-react"
+import { useFacets } from "@/hooks/useFacets"
+import { Plus, Palette, Camera, X, Loader2 } from "lucide-react"
 
 interface CreateFacetModalProps {
-  onFacetCreated?: (facet: any) => void
+  onSuccess?: () => void
   trigger?: React.ReactNode
 }
 
@@ -36,10 +36,10 @@ const facetCategories = [
   { value: "otro", label: "Otro", icon: "🌟" },
 ]
 
-export function CreateFacetModal({ onFacetCreated, trigger }: CreateFacetModalProps) {
+export function CreateFacetModal({ onSuccess, trigger }: CreateFacetModalProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+  const { createFacet, loading } = useFacets()
   
   const [facetData, setFacetData] = useState({
     name: "",
@@ -60,52 +60,75 @@ export function CreateFacetModal({ onFacetCreated, trigger }: CreateFacetModalPr
       return
     }
 
-    setIsLoading(true)
-
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      const newFacet = {
-        id: Date.now().toString(),
-        name: facetData.name,
-        description: facetData.description,
+      // Crear faceta en el backend
+      const result = await createFacet({
+        name: facetData.name.trim(),
+        description: facetData.description.trim(),
         category: facetData.category,
-        avatar: facetData.avatar || "/placeholder.svg",
-        isActive: false,
+        avatar: facetData.avatar || undefined,
+        isPublic: true,
+      })
+
+      if (result.success) {
+        toast({
+          title: "¡Faceta creada!",
+          description: `La faceta "${facetData.name}" ha sido creada exitosamente.`,
+        })
+
+        // Reset form
+        setFacetData({
+          name: "",
+          description: "",
+          category: "",
+          avatar: "",
+        })
+        
+        setIsOpen(false)
+        onSuccess?.()
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || "No se pudo crear la faceta.",
+          variant: "destructive",
+        })
       }
-
-      onFacetCreated?.(newFacet)
-      
-      toast({
-        title: "Faceta creada",
-        description: `La faceta "${facetData.name}" ha sido creada exitosamente.`,
-        variant: "default",
-      })
-
-      // Reset form
-      setFacetData({
-        name: "",
-        description: "",
-        category: "",
-        avatar: "",
-      })
-      
-      setIsOpen(false)
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "No se pudo crear la faceta. Intenta de nuevo.",
+        description: error.message || "No se pudo crear la faceta. Intenta de nuevo.",
         variant: "destructive",
       })
-    } finally {
-      setIsLoading(false)
     }
   }
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      // Validar tamaño del archivo (máximo 500KB para evitar problemas con base64)
+      const maxSize = 500 * 1024 // 500KB en bytes
+      if (file.size > maxSize) {
+        toast({
+          title: "Archivo muy grande",
+          description: "El avatar no puede superar los 500KB. Por favor selecciona una imagen más pequeña.",
+          variant: "destructive",
+        })
+        // Limpiar el input
+        e.target.value = ''
+        return
+      }
+
+      // Validar tipo de archivo
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Formato inválido",
+          description: "Por favor selecciona una imagen (PNG, JPG, etc.).",
+          variant: "destructive",
+        })
+        e.target.value = ''
+        return
+      }
+
       // In a real app, you would upload the file to a server
       const reader = new FileReader()
       reader.onload = (e) => {
@@ -168,7 +191,7 @@ export function CreateFacetModal({ onFacetCreated, trigger }: CreateFacetModalPr
                   onChange={handleAvatarChange}
                 />
                 <p className="text-xs text-muted-foreground">
-                  PNG, JPG hasta 2MB
+                  PNG, JPG hasta 500KB
                 </p>
               </div>
             </div>
@@ -263,12 +286,13 @@ export function CreateFacetModal({ onFacetCreated, trigger }: CreateFacetModalPr
               type="button"
               variant="outline"
               onClick={() => setIsOpen(false)}
-              disabled={isLoading}
+              disabled={loading}
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Creando..." : "Crear Faceta"}
+            <Button type="submit" disabled={loading} className="gap-2">
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {loading ? "Creando..." : "Crear Faceta"}
             </Button>
           </DialogFooter>
         </form>
