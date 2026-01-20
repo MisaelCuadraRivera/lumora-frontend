@@ -142,6 +142,16 @@ class ApiService {
     return response
   }
 
+  async loginWithGoogle(token: string): Promise<ApiResponse<LoginResponseData>> {
+    const response = await this.post<LoginResponseData>('/auth/google', { token })
+    
+    if (response.success && response.data) {
+      this.setToken(response.data.token)
+    }
+    
+    return response
+  }
+
   async getProfile(): Promise<ApiResponse<ProfileResponseData>> {
     return this.get<ProfileResponseData>('/auth/profile')
   }

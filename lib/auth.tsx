@@ -5,10 +5,13 @@ import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import type { User } from "@/types"
 import { apiService, type LoginResponseData, type RegisterResponseData, type ProfileResponseData } from "@/lib/api"
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth"
+import { auth } from "@/lib/firebase"
 
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>
+  loginWithGoogle: () => Promise<{ success: boolean; message?: string }>
   register: (email: string, password: string, username: string, firstName: string, lastName: string) => Promise<{ success: boolean; message?: string }>
   logout: () => void
   loading: boolean
@@ -245,6 +248,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const loginWithGoogle = async (): Promise<{ success: boolean; message?: string }> => {
+    setLoading(true)
+    try {
+      const provider = new GoogleAuthProvider()
+      const result = await signInWithPopup(auth, provider)
+      const user = result.user
+      const token = await user.getIdToken()
+      
+      // Enviar token al backend para validación y creación de sesión
+      const apiResponse = await apiService.loginWithGoogle(token)
+      
+      if (apiResponse.success && apiResponse.data) {
+        const { user: userData, facets }: LoginResponseData = apiResponse.data
+        
+        // Convertir datos del backend al formato del frontend
+        const frontendUser: User = {
+          id: userData.id,
+          username: userData.username,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          avatar: userData.avatar || "/diverse-user-avatars.png",
+          bio: userData.bio || "",
+          createdAt: new Date(userData.createdAt),
+          facets: facets || [],
+          isOnline: true,
+          isVerified: userData.isVerified || false,
+          preferences: userData.preferences || {},
+          followers: userData.followers || [],
+          following: userData.following || [],
+          blockedUsers: userData.blockedUsers || [],
+          stats: userData.stats || {
+            posts: 0,
+            followers: 0,
+            following: 0,
+            likes: 0,
+            views: 0
+          }
+        }
+
+        setUser(frontendUser)
+        localStorage.setItem("lumora_user", JSON.stringify(frontendUser))
+        return { success: true, message: apiResponse.message }
+      } else {
+        return { success: false, message: apiResponse.message || "Error al validar con el servidor" }
+      }
+    } catch (error: any) {
+      console.error("Google login error:", error)
+      return { success: false, message: error.message }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const logout = () => {
     setUser(null)
     apiService.setToken(null)
@@ -313,7 +370,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading, refreshUser }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, refreshUser, loginWithGoogle }}>
       {mounted ? children : null}
     </AuthContext.Provider>
   )
