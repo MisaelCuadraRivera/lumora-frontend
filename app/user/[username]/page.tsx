@@ -202,6 +202,7 @@ export default function UserProfilePage() {
                   onLike={handleLike}
                   onComment={handleComment}
                   onShare={handleSharePost}
+                  limitComments={true}
                 />
               ))}
             </div>

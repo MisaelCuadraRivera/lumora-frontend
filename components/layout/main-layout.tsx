@@ -71,7 +71,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
           <main className="flex-1 overflow-auto bg-background">{children}</main>
         </ResponsiveSidebarLayout>
       </div>
-      <ApiDebugPanel />
+      {/* <ApiDebugPanel /> */}
     </div>
   )
 }

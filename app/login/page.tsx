@@ -48,7 +48,7 @@ export default function LoginPage() {
     try {
       const result = await loginWithGoogle();
       if (result.success) {
-        router.push("/");
+        router.push("/feed");
       } else {
         setErrorMessage(result.message || "Error al iniciar sesión con Google");
       }
@@ -182,7 +182,7 @@ export default function LoginPage() {
       }
 
       if (result.success) {
-        router.push("/");
+        router.push("/feed");
       } else {
         setErrorMessage(
           result.message ||

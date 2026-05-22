@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { apiService } from "@/lib/api"
 import { 
   Settings, 
   User, 
@@ -50,7 +51,7 @@ import {
 import { useAuth } from "@/lib/auth"
 
 export default function SettingsPage() {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const { toast } = useToast()
   const [activeTab, setActiveTab] = useState("profile")
   const [showPassword, setShowPassword] = useState(false)
@@ -63,6 +64,18 @@ export default function SettingsPage() {
     bio: user?.bio || "",
     avatar: user?.avatar || "",
   })
+
+  // Actualizar profileData cuando user cambie
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        username: user.username || "",
+        email: user.email || "",
+        bio: user.bio || "",
+        avatar: user.avatar || "",
+      })
+    }
+  }, [user])
 
   // Notification settings
   const [notificationSettings, setNotificationSettings] = useState({
@@ -96,14 +109,59 @@ export default function SettingsPage() {
     highContrast: false,
   })
 
-  const handleSaveProfile = () => {
-    // TODO: Implement save profile
-    console.log("Saving profile:", profileData)
-    toast({
-      title: "Perfil actualizado",
-      description: "Tus cambios han sido guardados exitosamente.",
-      variant: "default",
-    })
+  const handleSaveProfile = async () => {
+    try {
+      // Preparar los datos para enviar a la API
+      const updateData: any = {}
+      
+      if (profileData.username !== user?.username) {
+        updateData.username = profileData.username
+      }
+      if (profileData.email !== user?.email) {
+        updateData.email = profileData.email
+      }
+      if (profileData.bio !== user?.bio) {
+        updateData.bio = profileData.bio
+      }
+      if (profileData.avatar !== user?.avatar) {
+        updateData.avatar = profileData.avatar
+      }
+
+      // Solo hacer la petición si hay cambios
+      if (Object.keys(updateData).length === 0) {
+        toast({
+          title: "Sin cambios",
+          description: "No hay cambios que guardar.",
+          variant: "default",
+        })
+        return
+      }
+
+      console.log("Guardando perfil:", updateData)
+      
+      // Hacer la llamada a la API
+      const response = await apiService.updateProfile(updateData)
+      
+      if (response.success) {
+        toast({
+          title: "Perfil actualizado",
+          description: "Tus cambios han sido guardados exitosamente.",
+          variant: "default",
+        })
+        
+        // Actualizar el usuario en el contexto de autenticación
+        await refreshUser()
+      } else {
+        throw new Error(response.message || "Error al actualizar el perfil")
+      }
+    } catch (error: any) {
+      console.error("Error al guardar perfil:", error)
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar el perfil. Inténtalo de nuevo.",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleChangePassword = () => {
