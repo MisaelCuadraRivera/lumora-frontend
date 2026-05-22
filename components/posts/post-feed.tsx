@@ -77,7 +77,14 @@ export function PostFeed({ spaceId, showCreatePost = true, posts: externalPosts 
       {showCreatePost && <PostComposer onPost={handleCreatePost} spaceId={spaceId} />}
 
       {filteredPosts.map((post) => (
-        <PostCard key={post.id} post={post} onLike={handleLike} onComment={handleComment} onShare={handleShare} />
+        <PostCard 
+          key={post.id} 
+          post={post} 
+          onLike={handleLike} 
+          onComment={handleComment} 
+          onShare={handleShare} 
+          limitComments={true}
+        />
       ))}
 
       {/* Infinite Scroll Loading */}

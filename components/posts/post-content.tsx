@@ -9,6 +9,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { formatTimeAgo } from "@/data"
 import type { Post } from "@/types"
 
+import { useState, useEffect } from "react"
+
 interface PostContentProps {
   post: Post
   onLike?: (postId: string) => void
@@ -18,7 +20,20 @@ interface PostContentProps {
 }
 
 export function PostContent({ post, onLike, onComment, onShare, onReport }: PostContentProps) {
+  const [isLiked, setIsLiked] = useState(post.isLiked || false)
+  const [likesCount, setLikesCount] = useState(post.likesCount ?? post.likes ?? 0)
+
+  useEffect(() => {
+    setIsLiked(post.isLiked || false)
+    setLikesCount(post.likesCount ?? post.likes ?? 0)
+  }, [post.isLiked, post.likes, post.likesCount])
+
   const handleLike = () => {
+    const newLikedState = !isLiked
+    const newCount = newLikedState ? likesCount + 1 : Math.max(0, likesCount - 1)
+    
+    setIsLiked(newLikedState)
+    setLikesCount(newCount)
     onLike?.(post.id)
   }
 
@@ -40,15 +55,15 @@ export function PostContent({ post, onLike, onComment, onShare, onReport }: Post
         {/* Post Header */}
         <div className="flex items-start gap-3 mb-4">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={post.author.avatar} />
+            <AvatarImage src={post.author?.avatar} />
             <AvatarFallback className="bg-primary/20 text-primary">
-              {post.author.username.charAt(0).toUpperCase()}
+              {post.author?.username?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-sm truncate">{post.author.username}</h3>
+              <h3 className="font-semibold text-sm truncate">{post.author?.username || "Usuario"}</h3>
               {post.facet && (
                 <Badge variant="secondary" className="text-xs">
                   {post.facet.name}
@@ -136,10 +151,10 @@ export function PostContent({ post, onLike, onComment, onShare, onReport }: Post
               variant="ghost"
               size="sm"
               onClick={handleLike}
-              className="gap-2 hover:text-red-500"
+              className={cn("gap-2 hover:text-red-500", isLiked && "text-red-500")}
             >
-              <Heart className="h-4 w-4" />
-              <span className="text-sm">{post.likes}</span>
+              <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
+              <span className="text-sm">{likesCount}</span>
             </Button>
             
             <Button
@@ -149,7 +164,7 @@ export function PostContent({ post, onLike, onComment, onShare, onReport }: Post
               className="gap-2"
             >
               <MessageCircle className="h-4 w-4" />
-              <span className="text-sm">{post.comments.length}</span>
+              <span className="text-sm">{post.commentsCount || 0}</span>
             </Button>
             
             <Button

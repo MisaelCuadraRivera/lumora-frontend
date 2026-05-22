@@ -9,7 +9,8 @@ import {
   GitBranch, 
   Star, 
   Eye, 
-  Fork, 
+  GitFork, 
+  Download,
   TrendingUp, 
   Calendar,
   Users,
@@ -156,10 +157,10 @@ export function TechSpace({ spaceId }: TechSpaceProps) {
                       <Star className="h-3 w-3" />
                       {project.stars}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Fork className="h-3 w-3" />
+                    <div className="flex items-center gap-1">
+                      <GitFork className="h-4 w-4" />
                       {project.forks}
-                    </span>
+                    </div>
                     <span className="flex items-center gap-1">
                       <Eye className="h-3 w-3" />
                       {project.issues} issues
