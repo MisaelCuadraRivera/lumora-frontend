@@ -169,6 +169,14 @@ class ApiService {
     return this.get(`/posts/feed?page=${page}&limit=${limit}`)
   }
 
+  async getSpacePosts(spaceId: string, page = 1, limit = 20) {
+    return this.get(`/posts/space/${spaceId}?page=${page}&limit=${limit}`)
+  }
+
+  async getUserPosts(userId: string, page = 1, limit = 20) {
+    return this.get(`/posts/user/${userId}?page=${page}&limit=${limit}`)
+  }
+
   async createPost(postData: any) {
     return this.post('/posts', postData)
   }
@@ -187,6 +195,18 @@ class ApiService {
 
   async toggleLike(postId: string) {
     return this.post(`/posts/${postId}/like`)
+  }
+
+  async getPostLikes(postId: string, page = 1, limit = 20) {
+    return this.get(`/posts/${postId}/likes?page=${page}&limit=${limit}`)
+  }
+
+  async addComment(postId: string, content: string, parentId?: string, facetId?: string) {
+    return this.post(`/posts/${postId}/comments`, { content, parentId, facetId })
+  }
+
+  async getCommentLikes(commentId: string, page = 1, limit = 20) {
+    return this.get(`/posts/comments/${commentId}/likes?page=${page}&limit=${limit}`)
   }
 
   // Métodos de espacios
