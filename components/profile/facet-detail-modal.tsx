@@ -16,29 +16,62 @@ interface FacetDetailModalProps {
 
 const facetIcons = {
   artista: "🎨",
+  creative: "🎨",
   profesional: "💼",
+  professional: "💼",
   viajero: "🌍",
+  traveler: "🌍",
   gamer: "🎮",
   escritor: "✍️",
+  writer: "✍️",
+  personal: "👤",
+  social: "👥",
+  fan: "❤️",
+  photographer: "📷",
+  musician: "🎵",
+  developer: "💻",
   otro: "⭐",
+  other: "⭐"
 }
 
 const facetColors = {
-  artista: "from-purple-500 to-pink-500",
-  profesional: "from-blue-500 to-cyan-500",
-  viajero: "from-green-500 to-emerald-500",
-  gamer: "from-red-500 to-orange-500",
-  escritor: "from-indigo-500 to-purple-500",
-  otro: "from-gray-500 to-slate-500",
+  artista: "bg-purple-500 text-white",
+  creative: "bg-purple-500 text-white",
+  profesional: "bg-blue-500 text-white",
+  professional: "bg-blue-500 text-white",
+  viajero: "bg-green-500 text-white",
+  traveler: "bg-green-500 text-white",
+  gamer: "bg-red-500 text-white",
+  escritor: "bg-indigo-500 text-white",
+  writer: "bg-indigo-500 text-white",
+  personal: "bg-sky-500 text-white",
+  social: "bg-pink-500 text-white",
+  fan: "bg-rose-500 text-white",
+  photographer: "bg-teal-500 text-white",
+  musician: "bg-orange-500 text-white",
+  developer: "bg-slate-700 text-white",
+  otro: "bg-gray-500 text-white",
+  other: "bg-gray-500 text-white"
 }
 
 const categoryLabels = {
   artista: "Artista",
+  creative: "Creador/Artista",
   profesional: "Profesional",
+  professional: "Profesional",
   viajero: "Viajero",
+  traveler: "Viajero",
   gamer: "Gamer",
   escritor: "Escritor",
+  writer: "Escritor",
+  personal: "Personal",
+  social: "Social",
+  fan: "Fan",
+  photographer: "Fotógrafo",
+  musician: "Músico",
+  developer: "Desarrollador",
   otro: "Otro",
+  other: "Otro"
 }
 
 export function FacetDetailModal({ facet, isOpen, onClose }: FacetDetailModalProps) {
@@ -60,7 +93,7 @@ export function FacetDetailModal({ facet, isOpen, onClose }: FacetDetailModalPro
               <AvatarImage src={facet.avatar || "/placeholder.svg"} />
               <AvatarFallback 
                 className={cn(
-                  "bg-gradient-to-br text-white text-2xl font-bold",
+                  "text-white text-2xl font-bold",
                   facetColors[facet.category]
                 )}
               >

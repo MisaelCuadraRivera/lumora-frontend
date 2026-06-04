@@ -94,7 +94,7 @@ export default function NotificationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-primary">
             Notificaciones
           </h1>
           <p className="text-muted-foreground mt-1">

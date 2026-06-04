@@ -13,7 +13,8 @@ import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { useEvents } from "@/hooks/useEvents"
 import { useSpaces } from "@/hooks/useSpaces"
-import { Calendar, MapPin, Video, Users, Tag, Plus, X, Globe, Lock } from "lucide-react"
+import { Calendar, MapPin, Video, Users, Tag, Plus, X, Globe, Lock, Image as ImageIcon, Upload, Loader2 } from "lucide-react"
+import { uploadFileToS3 } from "@/lib/mediaService"
 
 interface CreateEventModalProps {
   children?: React.ReactNode
@@ -41,6 +42,121 @@ const eventCategories = [
 export function CreateEventModal({ children, isOpen, onClose, spaceId }: CreateEventModalProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
+
+  // Multimedia States
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [bannerFile, setBannerFile] = useState<File | null>(null)
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null)
+
+  // Drag & Drop States
+  const [dragActiveImage, setDragActiveImage] = useState(false)
+  const [dragActiveBanner, setDragActiveBanner] = useState(false)
+
+  // Drag & Drop Handlers for Thumbnail (Image)
+  const handleDragImage = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActiveImage(true)
+    } else if (e.type === "dragleave") {
+      setDragActiveImage(false)
+    }
+  }
+
+  const handleDropImage = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActiveImage(false)
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0]
+      if (file.type.startsWith("image/")) {
+        if (imagePreview) {
+          URL.revokeObjectURL(imagePreview)
+        }
+        setImageFile(file)
+        setImagePreview(URL.createObjectURL(file))
+      } else {
+        toast({
+          title: "Error de archivo",
+          description: "Por favor, sube solo archivos de imagen para la miniatura",
+          variant: "destructive"
+        })
+      }
+    }
+  }
+
+  // Drag & Drop Handlers for Banner
+  const handleDragBanner = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActiveBanner(true)
+    } else if (e.type === "dragleave") {
+      setDragActiveBanner(false)
+    }
+  }
+
+  const handleDropBanner = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActiveBanner(false)
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0]
+      if (file.type.startsWith("image/")) {
+        if (bannerPreview) {
+          URL.revokeObjectURL(bannerPreview)
+        }
+        setBannerFile(file)
+        setBannerPreview(URL.createObjectURL(file))
+      } else {
+        toast({
+          title: "Error de archivo",
+          description: "Por favor, sube solo archivos de imagen para el banner",
+          variant: "destructive"
+        })
+      }
+    }
+  }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview)
+      }
+      setImageFile(file)
+      setImagePreview(URL.createObjectURL(file))
+    }
+  }
+
+  const handleRemoveImage = () => {
+    setImageFile(null)
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview)
+      setImagePreview(null)
+    }
+  }
+
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (bannerPreview) {
+        URL.revokeObjectURL(bannerPreview)
+      }
+      setBannerFile(file)
+      setBannerPreview(URL.createObjectURL(file))
+    }
+  }
+
+  const handleRemoveBanner = () => {
+    setBannerFile(null)
+    if (bannerPreview) {
+      URL.revokeObjectURL(bannerPreview)
+      setBannerPreview(null)
+    }
+  }
 
   // Debug: Log cuando el modal se abre
   console.log('CreateEventModal render:', { open, isOpen, children: !!children })
@@ -76,14 +192,25 @@ export function CreateEventModal({ children, isOpen, onClose, spaceId }: CreateE
   })
 
   const { toast } = useToast()
-  const { createEvent } = useEvents()
-  const { spaces } = useSpaces()
+  const { createEvent } = useEvents({ autoFetch: false })
+  const { spaces } = useSpaces({ autoFetch: false })
 
   const handleClose = () => {
     if (onClose) {
       onClose()
     } else {
       setOpen(false)
+    }
+    // Clean up multimedia previews and files
+    setImageFile(null)
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview)
+      setImagePreview(null)
+    }
+    setBannerFile(null)
+    if (bannerPreview) {
+      URL.revokeObjectURL(bannerPreview)
+      setBannerPreview(null)
     }
     // Reset form
     setFormData({
@@ -199,6 +326,38 @@ export function CreateEventModal({ children, isOpen, onClose, spaceId }: CreateE
     setLoading(true)
     
     try {
+      // 1. Subir archivos a S3 concurrentemente si están seleccionados
+      let imageKey = null
+      let bannerKey = null
+      
+      const uploadPromises = []
+      if (imageFile) {
+        setUploading(true)
+        uploadPromises.push(
+          uploadFileToS3(imageFile)
+            .then(key => { imageKey = key })
+            .catch(err => { throw new Error(`Miniatura: ${err.message}`) })
+        )
+      }
+      if (bannerFile) {
+        setUploading(true)
+        uploadPromises.push(
+          uploadFileToS3(bannerFile)
+            .then(key => { bannerKey = key })
+            .catch(err => { throw new Error(`Banner: ${err.message}`) })
+        )
+      }
+      
+      if (uploadPromises.length > 0) {
+        try {
+          await Promise.all(uploadPromises)
+        } catch (uploadErr: any) {
+          throw new Error(`Error al subir archivos: ${uploadErr.message}`)
+        } finally {
+          setUploading(false)
+        }
+      }
+
       const eventData = {
         title: formData.title,
         description: formData.description,
@@ -217,7 +376,9 @@ export function CreateEventModal({ children, isOpen, onClose, spaceId }: CreateE
         tags: formData.tags,
         speakers: formData.speakers,
         streaming: formData.streaming,
-        spaceId: spaceId || null
+        spaceId: spaceId || null,
+        imageKey: imageKey,
+        bannerKey: bannerKey
       }
       
       console.log("Enviando datos del evento:", eventData)
@@ -292,7 +453,7 @@ export function CreateEventModal({ children, isOpen, onClose, spaceId }: CreateE
           {children}
         </DialogTrigger>
       )}
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto scrollbar-thin">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
@@ -369,6 +530,145 @@ export function CreateEventModal({ children, isOpen, onClose, spaceId }: CreateE
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Multimedia */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <ImageIcon className="h-5 w-5" />
+                Multimedia del Evento
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Miniatura / Thumbnail Column (Square aspect ratio 1:1) */}
+                <div className="space-y-2 md:col-span-1">
+                  <Label className="text-sm font-medium">Miniatura del Evento (1:1)</Label>
+                  <div 
+                    onClick={() => document.getElementById('thumbnail-image-input')?.click()}
+                    onDragEnter={handleDragImage}
+                    onDragOver={handleDragImage}
+                    onDragLeave={handleDragImage}
+                    onDrop={handleDropImage}
+                    className={`relative aspect-square w-full border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-300 overflow-hidden ${
+                      imagePreview 
+                        ? 'border-transparent bg-muted' 
+                        : dragActiveImage
+                          ? 'border-primary bg-primary/5 scale-[0.99] shadow-inner ring-2 ring-primary/20'
+                          : 'border-muted-foreground/30 hover:border-primary/50 bg-card/50 backdrop-blur-sm hover:bg-accent/5 hover:scale-[1.01] hover:shadow-lg'
+                    }`}
+                  >
+                    {imagePreview ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                          src={imagePreview} 
+                          alt="Miniatura del evento" 
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 rounded-full h-8 w-8 shadow-md hover:scale-110 active:scale-95 transition-transform"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleRemoveImage()
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 p-4 text-center text-muted-foreground group">
+                        <div className={`p-2.5 rounded-full bg-primary/10 text-primary transition-transform duration-300 ${dragActiveImage ? 'scale-125' : 'group-hover:scale-110'}`}>
+                          <ImageIcon className="h-5 w-5" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs font-semibold text-foreground">
+                            {dragActiveImage ? '¡Suelta aquí!' : 'Sube una miniatura'}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            1:1 (PNG, JPG, WEBP)
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    <input
+                      id="thumbnail-image-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="hidden"
+                      onChange={handleImageChange}
+                    />
+                  </div>
+                </div>
+
+                {/* Banner Column */}
+                <div className="space-y-2 md:col-span-2">
+                  <Label className="text-sm font-medium">Banner del Evento (Horizontal 16:9)</Label>
+                  <div 
+                    onClick={() => document.getElementById('banner-image-input')?.click()}
+                    onDragEnter={handleDragBanner}
+                    onDragOver={handleDragBanner}
+                    onDragLeave={handleDragBanner}
+                    onDrop={handleDropBanner}
+                    className={`relative h-full min-h-[160px] md:min-h-0 aspect-[16/9] md:aspect-auto md:h-[calc(100%-2rem)] w-full border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-300 overflow-hidden ${
+                      bannerPreview 
+                        ? 'border-transparent bg-muted' 
+                        : dragActiveBanner
+                          ? 'border-primary bg-primary/5 scale-[0.99] shadow-inner ring-2 ring-primary/20'
+                          : 'border-muted-foreground/30 hover:border-primary/50 bg-card/50 backdrop-blur-sm hover:bg-accent/5 hover:scale-[1.01] hover:shadow-lg'
+                    }`}
+                  >
+                    {bannerPreview ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                          src={bannerPreview} 
+                          alt="Banner del evento" 
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 rounded-full h-8 w-8 shadow-md hover:scale-110 active:scale-95 transition-transform"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleRemoveBanner()
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 p-6 text-center text-muted-foreground group">
+                        <div className={`p-3 rounded-full bg-primary/10 text-primary transition-transform duration-300 ${dragActiveBanner ? 'scale-125' : 'group-hover:scale-110'}`}>
+                          <Upload className="h-6 w-6" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-foreground">
+                            {dragActiveBanner ? '¡Suelta aquí!' : 'Haz clic o arrastra un banner'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            16:9 recomendado (máximo 5MB)
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    <input
+                      id="banner-image-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="hidden"
+                      onChange={handleBannerChange}
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -707,8 +1007,17 @@ export function CreateEventModal({ children, isOpen, onClose, spaceId }: CreateE
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Creando..." : "Crear Evento"}
+            <Button type="submit" disabled={loading || uploading}>
+              {uploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Subiendo imágenes...
+                </>
+              ) : loading ? (
+                "Creando..."
+              ) : (
+                "Crear Evento"
+              )}
             </Button>
           </div>
         </form>

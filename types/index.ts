@@ -44,11 +44,16 @@ export interface Post {
   links?: string[]
   tags: string[]
   likes: number
+  likesCount?: number // Compatibilidad backend
+  isLiked?: boolean
   shares: number
+  sharesCount?: number // Compatibilidad backend
   comments: Comment[]
+  commentsCount?: number // Compatibilidad backend
   createdAt: Date
   updatedAt: Date
   spaceId?: string
+  media?: any[] // Para compatibilidad con algunos endpoints
 }
 
 export interface Comment {

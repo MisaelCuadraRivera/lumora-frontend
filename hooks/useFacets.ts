@@ -14,7 +14,8 @@ interface UseFacetsReturn {
   refreshFacets: () => Promise<void>
 }
 
-export function useFacets(): UseFacetsReturn {
+export function useFacets(options: { autoFetch?: boolean } = {}): UseFacetsReturn {
+  const { autoFetch = true } = options
   const [facets, setFacets] = useState<Facet[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -118,8 +119,10 @@ export function useFacets(): UseFacetsReturn {
 
   // Cargar facetas iniciales
   useEffect(() => {
-    loadFacets()
-  }, [loadFacets])
+    if (autoFetch) {
+      loadFacets()
+    }
+  }, [loadFacets, autoFetch])
 
   return {
     facets,

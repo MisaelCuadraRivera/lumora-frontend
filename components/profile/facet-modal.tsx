@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -32,28 +32,28 @@ import {
   Music,
   Code,
   BookOpen,
-  MessageSquare
+  MessageSquare,
+  Loader2
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth"
+import { useFacets } from "@/hooks/useFacets"
 
 interface FacetModalProps {
   isOpen: boolean
   onClose: () => void
   mode: "create" | "edit"
   facet?: any
+  onSuccess?: () => void
 }
 
 const facetTypes = [
-  { id: "personal", name: "Personal", icon: User, color: "bg-blue-500", description: "Tu yo más auténtico" },
-  { id: "professional", name: "Profesional", icon: Briefcase, color: "bg-green-500", description: "Tu faceta laboral" },
-  { id: "creative", name: "Creativo", icon: Palette, color: "bg-purple-500", description: "Artista y creador" },
-  { id: "social", name: "Social", icon: Users, color: "bg-pink-500", description: "Vida social y amigos" },
-  { id: "fan", name: "Fan", icon: Heart, color: "bg-red-500", description: "Fan de artistas y contenido" },
-  { id: "photographer", name: "Fotógrafo", icon: Camera, color: "bg-indigo-500", description: "Fotografía y visuales" },
-  { id: "musician", name: "Músico", icon: Music, color: "bg-orange-500", description: "Música y audio" },
-  { id: "developer", name: "Desarrollador", icon: Code, color: "bg-gray-500", description: "Tech y programación" },
-  { id: "writer", name: "Escritor", icon: BookOpen, color: "bg-teal-500", description: "Escritura y literatura" }
+  { id: "artista", name: "Artista", icon: Palette, color: "bg-purple-500", description: "Artista, creador y creativo" },
+  { id: "profesional", name: "Profesional", icon: Briefcase, color: "bg-blue-500", description: "Trabajo, desarrollo o profesión" },
+  { id: "viajero", name: "Viajero", icon: Globe, color: "bg-green-500", description: "Viajes, exploración y aventuras" },
+  { id: "gamer", name: "Gamer", icon: CheckCircle, color: "bg-red-500", description: "Videojuegos y gaming" },
+  { id: "escritor", name: "Escritor", icon: BookOpen, color: "bg-indigo-500", description: "Escritura, lectura y literatura" },
+  { id: "otro", name: "Otro", icon: Settings, color: "bg-gray-500", description: "Otros aspectos de tu vida y personalidad" }
 ]
 
 const privacyLevels = [
@@ -63,10 +63,10 @@ const privacyLevels = [
   { id: "custom", name: "Personalizado", icon: Settings, description: "Configuración específica" }
 ]
 
-export function FacetModal({ isOpen, onClose, mode, facet }: FacetModalProps) {
+export function FacetModal({ isOpen, onClose, mode, facet, onSuccess }: FacetModalProps) {
   const [facetData, setFacetData] = useState({
     name: facet?.name || "",
-    type: facet?.type || "",
+    type: facet?.type || facet?.category || "",
     description: facet?.description || "",
     privacy: facet?.privacy || "public",
     avatar: facet?.avatar || "",
@@ -79,8 +79,31 @@ export function FacetModal({ isOpen, onClose, mode, facet }: FacetModalProps) {
       showInSearch: true
     }
   })
+  
   const { toast } = useToast()
   const { user } = useAuth()
+  const { createFacet, updateFacet, loading } = useFacets({ autoFetch: false })
+
+  // Synchronize state when facet or isOpen changes
+  useEffect(() => {
+    if (isOpen) {
+      setFacetData({
+        name: facet?.name || "",
+        type: facet?.type || facet?.category || "",
+        description: facet?.description || "",
+        privacy: facet?.privacy || "public",
+        avatar: facet?.avatar || "",
+        bio: facet?.bio || "",
+        isActive: facet?.isActive || false,
+        customPrivacy: facet?.customPrivacy || {
+          allowComments: true,
+          allowMessages: true,
+          allowFollows: true,
+          showInSearch: true
+        }
+      })
+    }
+  }, [facet, isOpen])
 
   const handleSave = async () => {
     if (!facetData.name.trim()) {
@@ -102,16 +125,59 @@ export function FacetModal({ isOpen, onClose, mode, facet }: FacetModalProps) {
     }
 
     try {
-      // Aquí iría la lógica para guardar la faceta
-      toast({
-        title: mode === "create" ? "¡Faceta creada!" : "¡Faceta actualizada!",
-        description: `"${facetData.name}" ha sido ${mode === "create" ? "creada" : "actualizada"} exitosamente`,
-      })
-      onClose()
-    } catch (error) {
+      // Map any English/legacy categories to backend-supported Spanish categories
+      const categoryMap: { [key: string]: string } = {
+        personal: "otro",
+        professional: "profesional",
+        profesional: "profesional",
+        creative: "artista",
+        artista: "artista",
+        social: "otro",
+        fan: "otro",
+        photographer: "artista",
+        musician: "artista",
+        developer: "profesional",
+        writer: "escritor",
+        escritor: "escritor",
+        traveler: "viajero",
+        viajero: "viajero",
+        gamer: "gamer",
+        otro: "otro",
+        other: "otro"
+      }
+
+      const backendCategory = categoryMap[facetData.type] || "otro"
+
+      const payload = {
+        name: facetData.name.trim(),
+        description: facetData.description.trim(),
+        category: backendCategory, // map frontend selected "type" to backend expected valid "category"
+        avatar: facetData.avatar || undefined,
+        bio: facetData.bio || undefined,
+        isPublic: facetData.privacy === "public",
+      }
+
+      let result
+      if (mode === "create") {
+        result = await createFacet(payload)
+      } else {
+        result = await updateFacet(facet.id, payload)
+      }
+
+      if (result.success) {
+        toast({
+          title: mode === "create" ? "¡Faceta creada!" : "¡Faceta actualizada!",
+          description: `"${facetData.name}" ha sido ${mode === "create" ? "creada" : "actualizada"} exitosamente`,
+        })
+        onSuccess?.()
+        onClose()
+      } else {
+        throw new Error(result.message || "Error al procesar la solicitud")
+      }
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: `Hubo un problema al ${mode === "create" ? "crear" : "actualizar"} la faceta`,
+        description: error.message || `Hubo un problema al ${mode === "create" ? "crear" : "actualizar"} la faceta`,
         variant: "destructive"
       })
     }
@@ -121,7 +187,7 @@ export function FacetModal({ isOpen, onClose, mode, facet }: FacetModalProps) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <DialogTitle className="text-2xl font-bold text-primary">
             {mode === "create" ? "Crear Nueva Faceta" : "Editar Faceta"}
           </DialogTitle>
         </DialogHeader>
@@ -290,7 +356,7 @@ export function FacetModal({ isOpen, onClose, mode, facet }: FacetModalProps) {
                   <Avatar className="h-16 w-16">
                     <AvatarImage src={facetData.avatar || user?.avatar} />
                     <AvatarFallback className="bg-primary text-primary-foreground text-lg">
-                      {facetData.name.charAt(0).toUpperCase()}
+                      {facetData.name.charAt(0).toUpperCase() || "F"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
@@ -319,12 +385,13 @@ export function FacetModal({ isOpen, onClose, mode, facet }: FacetModalProps) {
 
           {/* Action Buttons */}
           <div className="flex justify-between pt-4">
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose} disabled={loading}>
               Cancelar
             </Button>
 
-            <Button onClick={handleSave} className="min-w-[100px]">
-              {mode === "create" ? "Crear Faceta" : "Guardar Cambios"}
+            <Button onClick={handleSave} className="min-w-[100px]" disabled={loading}>
+              {loading && <Loader2 className="h-4 w-4 animate-spin mr-2 inline" />}
+              {loading ? "Guardando..." : (mode === "create" ? "Crear Faceta" : "Guardar Cambios")}
             </Button>
           </div>
         </div>

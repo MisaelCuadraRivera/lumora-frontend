@@ -31,7 +31,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
           <div className="flex items-center justify-center mb-4">
             <LumoraLogo width={48} height={48} className="drop-shadow-lg" />
           </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-4">
+          <h1 className="text-2xl font-bold text-primary mb-4">
             Lumora
           </h1>
           <Loader2 className="h-6 w-6 animate-spin mx-auto" />
@@ -47,7 +47,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
           <div className="flex items-center justify-center mb-4">
             <LumoraLogo width={48} height={48} className="drop-shadow-lg" />
           </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-4">
+          <h1 className="text-2xl font-bold text-primary mb-4">
             Lumora
           </h1>
           <Loader2 className="h-6 w-6 animate-spin mx-auto" />
@@ -71,7 +71,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
           <main className="flex-1 overflow-auto bg-background">{children}</main>
         </ResponsiveSidebarLayout>
       </div>
-      <ApiDebugPanel />
+      {/* <ApiDebugPanel /> */}
     </div>
   )
 }

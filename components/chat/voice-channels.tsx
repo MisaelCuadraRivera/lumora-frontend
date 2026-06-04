@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Mic, MicOff, Headphones, HeadphonesOff, Users, Settings, Phone, PhoneOff, Video, VideoOff, Monitor, MonitorOff } from "lucide-react"
+import { Mic, MicOff, Headphones, HeadphoneOff, Users, Settings, Phone, PhoneOff, Video, VideoOff, Monitor, MonitorOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -108,7 +108,7 @@ export function VoiceChannels({
                           <Mic className="w-3 h-3 text-slate-400" />
                         )}
                         {user.isDeafened && (
-                          <HeadphonesOff className="w-3 h-3 text-red-400" />
+                          <HeadphoneOff className="w-3 h-3 text-red-400" />
                         )}
                       </div>
                     </div>
@@ -163,7 +163,7 @@ export function VoiceChannels({
               >
                 {currentUser.isDeafened ? (
                   <>
-                    <HeadphonesOff className="w-4 h-4 mr-1" />
+                    <HeadphoneOff className="w-4 h-4 mr-1" />
                     Activar Audio
                   </>
                 ) : (

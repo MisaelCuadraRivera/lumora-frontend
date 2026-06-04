@@ -27,7 +27,7 @@ export function SimpleCreateEventModal({ children, spaceId }: SimpleCreateEventM
   })
 
   const { toast } = useToast()
-  const { createEvent } = useEvents()
+  const { createEvent } = useEvents({ autoFetch: false })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

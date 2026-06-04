@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { CreateSpaceModal } from "@/components/spaces/create-space-modal"
 import { AnimatedLogo } from "@/components/ui/animated-logo"
 import { useSpaces } from "@/hooks/useSpaces"
+import { useAuth } from "@/lib/auth"
 import { 
   Plus, 
   Users, 
@@ -30,7 +31,8 @@ import { DebugPanel } from "@/components/debug-panel"
 export default function RootPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const router = useRouter()
-  const { spaces, loading, error } = useSpaces()
+  const { user } = useAuth()
+  const { spaces, loading, error } = useSpaces({ autoFetch: !!user })
 
   // Debug logs
   console.log('RootPage - spaces:', spaces)
@@ -62,10 +64,10 @@ export default function RootPage() {
   const featuredSpaces = spaces.slice(0, 6)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-accent/10"></div>
+        <div className="absolute inset-0 bg-primary/[0.02]"></div>
         <div className="relative max-w-7xl mx-auto px-6 py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -78,7 +80,7 @@ export default function RootPage() {
             </div>
             
             <div className="space-y-4">
-              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+              <h1 className="text-5xl md:text-6xl font-bold text-primary">
                 Bienvenido a Lumora
               </h1>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -90,7 +92,7 @@ export default function RootPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
                 size="lg" 
-                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 onClick={() => router.push('/explore')}
               >
                 <Compass className="h-5 w-5 mr-2" />

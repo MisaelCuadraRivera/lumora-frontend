@@ -9,14 +9,14 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { 
-  Search, 
-  Filter, 
-  Calendar, 
-  MapPin, 
-  Clock, 
-  Users, 
-  Video, 
+import {
+  Search,
+  Filter,
+  Calendar,
+  MapPin,
+  Clock,
+  Users,
+  Video,
   Ticket,
   Star,
   TrendingUp,
@@ -29,7 +29,9 @@ import {
   Globe,
   Monitor,
   Smartphone,
-  RefreshCw
+  RefreshCw,
+  LayoutGrid,
+  List
 } from "lucide-react"
 import { useAuth } from "@/lib/auth"
 import { useToast } from "@/hooks/use-toast"
@@ -81,13 +83,13 @@ export function EventCatalog({ spaceId, organizerId, categoryId }: EventCatalogP
 
   // Categorías de eventos del backend
   const eventCategories = [
-    { id: "conference", name: "Conferencia", icon: "🎤" },
-    { id: "workshop", name: "Taller", icon: "🔧" },
-    { id: "meetup", name: "Meetup", icon: "🤝" },
-    { id: "concert", name: "Concierto", icon: "🎵" },
-    { id: "exhibition", name: "Exposición", icon: "🖼️" },
-    { id: "sports", name: "Deportes", icon: "⚽" },
-    { id: "other", name: "Otro", icon: "📅" }
+    { id: "conference", name: "Conferencia" },
+    { id: "workshop", name: "Taller" },
+    { id: "meetup", name: "Meetup" },
+    { id: "concert", name: "Concierto" },
+    { id: "exhibition", name: "Exposición" },
+    { id: "sports", name: "Deportes" },
+    { id: "other", name: "Otro" }
   ]
 
   // Load events based on props
@@ -222,11 +224,11 @@ export function EventCatalog({ spaceId, organizerId, categoryId }: EventCatalogP
   const formatDate = (date: Date | string) => {
     try {
       const dateObj = typeof date === 'string' ? new Date(date) : date
-      
+
       if (isNaN(dateObj.getTime())) {
         return 'Fecha inválida'
       }
-      
+
       return new Intl.DateTimeFormat('es-MX', {
         weekday: 'long',
         year: 'numeric',
@@ -247,8 +249,8 @@ export function EventCatalog({ spaceId, organizerId, categoryId }: EventCatalogP
       const now = new Date()
       const startDate = new Date(event.startDate)
       const endDate = new Date(event.endDate)
-      return !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && 
-             startDate <= now && endDate >= now
+      return !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) &&
+        startDate <= now && endDate >= now
     } catch (error) {
       console.error('Error filtering live events:', error, 'Event dates:', event.startDate, event.endDate)
       return false
@@ -302,9 +304,9 @@ export function EventCatalog({ spaceId, organizerId, categoryId }: EventCatalogP
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-primary">
             {spaceId ? "Eventos del Espacio" : "Eventos"}
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -312,65 +314,78 @@ export function EventCatalog({ spaceId, organizerId, categoryId }: EventCatalogP
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            Filtros
-          </Button>
-
-          <div className="flex items-center border rounded-md">
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto justify-start sm:justify-end">
+          {/* Botones de acción principales */}
+          <div className="grid grid-cols-3 gap-2 w-full sm:flex sm:w-auto">
             <Button
-              variant={viewMode === "grid" ? "default" : "ghost"}
+              variant="outline"
               size="sm"
-              onClick={() => setViewMode("grid")}
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex-shrink-0 h-8"
             >
-              <div className="grid grid-cols-2 gap-1 w-4 h-4">
-                <div className="bg-current rounded-sm" />
-                <div className="bg-current rounded-sm" />
-                <div className="bg-current rounded-sm" />
-                <div className="bg-current rounded-sm" />
-              </div>
+              <Filter className="w-4 h-4 mr-2" />
+              Filtros
             </Button>
             <Button
-              variant={viewMode === "list" ? "default" : "ghost"}
+              variant="outline"
               size="sm"
-              onClick={() => setViewMode("list")}
-            >
-              <div className="flex flex-col gap-1 w-4 h-4">
-                <div className="bg-current rounded-sm h-1" />
-                <div className="bg-current rounded-sm h-1" />
-                <div className="bg-current rounded-sm h-1" />
-              </div>
-            </Button>
-            <Button
-              variant={viewMode === "calendar" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("calendar")}
-            >
-              <Calendar className="w-4 h-4" />
-            </Button>
-          </div>
-
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
               onClick={handleRefreshEvents}
               disabled={loading}
+              className="flex-shrink-0 h-8"
             >
               <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Recargar
             </Button>
-            
+
             <CompleteCreateEventModal spaceId={spaceId}>
-              <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90">
-                <Plus className="w-4 h-4 mr-2" />
-                Crear Evento
+              <Button
+                size="sm"
+                variant="ghost"
+                aria-label="Crear evento"
+                title="Crear evento"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0 h-8 w-full sm:w-auto flex items-center justify-center px-3"
+              >
+                <Plus className="w-4 h-4 mr-1.5" />
+                <span>Crear</span>
               </Button>
             </CompleteCreateEventModal>
+          </div>
+
+          {/* Selector de modo de vista */}
+          <div className="flex items-center border rounded-md h-9 p-1 gap-1 w-full sm:w-auto bg-slate-100/80 dark:bg-slate-800/60 border-slate-200/50 dark:border-slate-700/50 shadow-inner">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode("grid")}
+              className={`px-4 flex-1 sm:flex-initial h-7 transition-all duration-200 ${viewMode === "grid"
+                  ? "bg-white dark:bg-slate-950 shadow-xs text-primary hover:bg-white dark:hover:bg-slate-950"
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-slate-800/40"
+                }`}
+            >
+              <LayoutGrid className={`w-4 h-4 transition-all duration-200 ${viewMode === "grid" ? "fill-primary" : ""}`} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className={`px-4 flex-1 sm:flex-initial h-7 transition-all duration-200 ${viewMode === "list"
+                  ? "bg-white dark:bg-slate-950 shadow-xs text-primary hover:bg-white dark:hover:bg-slate-950"
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-slate-800/40"
+                }`}
+            >
+              <List className={`w-4 h-4 transition-all duration-200 ${viewMode === "list" ? "fill-primary" : ""}`} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode("calendar")}
+              className={`px-4 flex-1 sm:flex-initial h-7 transition-all duration-200 ${viewMode === "calendar"
+                  ? "bg-white dark:bg-slate-950 shadow-xs text-primary hover:bg-white dark:hover:bg-slate-950"
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-slate-800/40"
+                }`}
+            >
+              <Calendar className={`w-4 h-4 transition-all duration-200 ${viewMode === "calendar" ? "fill-primary" : ""}`} />
+            </Button>
           </div>
         </div>
       </div>
@@ -390,10 +405,10 @@ export function EventCatalog({ spaceId, organizerId, categoryId }: EventCatalogP
 
         {/* Category Tabs */}
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-          <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="">Todos</TabsTrigger>
+          <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-8 h-auto md:h-10 p-1 justify-start md:justify-center gap-1.5 md:gap-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <TabsTrigger value="" className="flex-shrink-0 whitespace-nowrap">Todos</TabsTrigger>
             {eventCategories.map((category) => (
-              <TabsTrigger key={category.id} value={category.id}>
+              <TabsTrigger key={category.id} value={category.id} className="flex-shrink-0 whitespace-nowrap">
                 <span className="mr-2">{category.icon}</span>
                 {category.name}
               </TabsTrigger>
@@ -423,7 +438,7 @@ export function EventCatalog({ spaceId, organizerId, categoryId }: EventCatalogP
 
       {/* Events Display */}
       {viewMode === "calendar" ? (
-        <EventCalendar 
+        <EventCalendar
           events={filteredEvents}
           onEventClick={(event) => console.log("Event clicked:", event)}
         />
@@ -436,8 +451,8 @@ export function EventCatalog({ spaceId, organizerId, categoryId }: EventCatalogP
           </p>
         </div>
       ) : (
-        <div className={viewMode === "grid" 
-          ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        <div className={viewMode === "grid"
+          ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 p-4"
           : "space-y-4"
         }>
           <AnimatePresence>
@@ -454,6 +469,8 @@ export function EventCatalog({ spaceId, organizerId, categoryId }: EventCatalogP
                   viewMode={viewMode}
                   onRSVP={handleRSVP}
                   onCancelRSVP={handleCancelRSVP}
+                  onDelete={handleRefreshEvents}
+                  onUpdate={handleRefreshEvents}
                 />
               </motion.div>
             ))}

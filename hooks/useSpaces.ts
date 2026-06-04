@@ -16,7 +16,8 @@ interface UseSpacesReturn {
   getSpace: (spaceId: string) => Promise<{ success: boolean; data?: Space; message?: string }>
 }
 
-export function useSpaces(): UseSpacesReturn {
+export function useSpaces(options: { autoFetch?: boolean } = {}): UseSpacesReturn {
+  const { autoFetch = true } = options
   const [spaces, setSpaces] = useState<Space[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -175,14 +176,17 @@ export function useSpaces(): UseSpacesReturn {
     }
   }, [])
 
+
   const refreshSpaces = useCallback(async () => {
     await loadSpaces()
   }, [loadSpaces])
 
   // Cargar espacios iniciales
   useEffect(() => {
-    loadSpaces()
-  }, [loadSpaces])
+    if (autoFetch) {
+      loadSpaces()
+    }
+  }, [loadSpaces, autoFetch])
 
   return {
     spaces,

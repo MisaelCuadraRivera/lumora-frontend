@@ -48,7 +48,8 @@ class ApiService {
   // Método genérico para hacer peticiones
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    retryCount = 0
   ): Promise<ApiResponse<T>> {
     try {
       const url = `${this.baseURL}${endpoint}`
@@ -71,11 +72,14 @@ class ApiService {
       if (!response.ok) {
         // Manejar errores específicos
         if (response.status === 429) {
-          console.warn('Rate limit exceeded, retrying after delay...')
-          // Esperar un poco antes de reintentar
-          await new Promise(resolve => setTimeout(resolve, 2000))
-          // Reintentar una vez
-          return this.request<T>(endpoint, options)
+          if (retryCount < 3) {
+            const delay = Math.pow(2, retryCount) * 1000 + Math.random() * 1000
+            console.warn(`Rate limit exceeded. Retrying endpoint ${endpoint} (attempt ${retryCount + 1}/3) after ${Math.round(delay)}ms...`)
+            await new Promise(resolve => setTimeout(resolve, delay))
+            return this.request<T>(endpoint, options, retryCount + 1)
+          }
+          console.error(`Rate limit exceeded. Max retries (3) reached for endpoint ${endpoint}`)
+          throw new Error('Límite de peticiones excedido. Intenta de nuevo más tarde.')
         }
         
         if (response.status === 401) {
@@ -165,8 +169,17 @@ class ApiService {
   }
 
   // Métodos de posts
-  async getFeed(page = 1, limit = 20) {
-    return this.get(`/posts/feed?page=${page}&limit=${limit}`)
+  async getFeed(page = 1, limit = 20, sortBy?: string) {
+    const sortParam = sortBy ? `&sortBy=${sortBy}` : ''
+    return this.get(`/posts/feed?page=${page}&limit=${limit}${sortParam}`)
+  }
+
+  async getSpacePosts(spaceId: string, page = 1, limit = 20) {
+    return this.get(`/posts/space/${spaceId}?page=${page}&limit=${limit}`)
+  }
+
+  async getUserPosts(userId: string, page = 1, limit = 20) {
+    return this.get(`/posts/user/${userId}?page=${page}&limit=${limit}`)
   }
 
   async createPost(postData: any) {
@@ -187,6 +200,18 @@ class ApiService {
 
   async toggleLike(postId: string) {
     return this.post(`/posts/${postId}/like`)
+  }
+
+  async getPostLikes(postId: string, page = 1, limit = 20) {
+    return this.get(`/posts/${postId}/likes?page=${page}&limit=${limit}`)
+  }
+
+  async addComment(postId: string, content: string, parentId?: string, facetId?: string) {
+    return this.post(`/posts/${postId}/comments`, { content, parentId, facetId })
+  }
+
+  async getCommentLikes(commentId: string, page = 1, limit = 20) {
+    return this.get(`/posts/comments/${commentId}/likes?page=${page}&limit=${limit}`)
   }
 
   // Métodos de espacios
@@ -337,6 +362,10 @@ class ApiService {
   }
 
   // Métodos de eventos
+  async getPresignedUrl(fileName: string, fileType: string): Promise<ApiResponse<{ uploadUrl: string, key: string }>> {
+    return this.get(`/media/presigned-url?fileName=${encodeURIComponent(fileName)}&fileType=${encodeURIComponent(fileType)}`)
+  }
+
   async createEvent(eventData: any) {
     return this.post('/events', eventData)
   }
@@ -361,7 +390,7 @@ class ApiService {
   async getEventByIdWithoutIncrement(eventId: string) {
     // Método alternativo que no incrementa vistas (para evitar errores de viewsCount)
     // Usar el endpoint público y filtrar por ID
-    const response = await this.getPublicEvents(1, 1000)
+    const response = await this.getPublicEvents(1, 1000, { includePast: true })
     if (response.success && response.data && typeof response.data === 'object' && response.data !== null && 'events' in response.data) {
       const events = (response.data as any).events
       const event = events.find((e: any) => e.id === eventId)
@@ -398,6 +427,34 @@ class ApiService {
 
   async getCalendarEvents(startDate: string, endDate: string) {
     return this.get(`/events/calendar?startDate=${startDate}&endDate=${endDate}`)
+  }
+
+  async toggleFollow(userId: string) {
+    return this.post(`/users/${userId}/follow`)
+  }
+
+  async toggleBlock(userId: string) {
+    return this.post(`/users/${userId}/block`)
+  }
+
+  async getUserByUsername(username: string) {
+    return this.get(`/users/username/${username}`)
+  }
+
+  async changePassword(currentPassword: string, newPassword: string) {
+    return this.post('/auth/change-password', { currentPassword, newPassword })
+  }
+
+  async updatePreferences(preferences: any) {
+    return this.put('/auth/preferences', preferences)
+  }
+
+  async exportUserData() {
+    return this.get('/auth/export-data')
+  }
+
+  async deleteAccount() {
+    return this.delete('/auth/profile')
   }
 }
 

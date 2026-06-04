@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/lib/auth"
-import { mockPosts, mockSpaces } from "@/data"
+import { mockSpaces } from "@/data"
 import { 
   Clock, 
   TrendingUp, 
@@ -48,8 +48,10 @@ const contentTypes = [
 
 export function CrossFeed() {
   const { user } = useAuth()
-  const { posts: backendPosts, createPost, loading: postsLoading } = usePosts()
   const [selectedAlgorithm, setSelectedAlgorithm] = useState("mixed")
+  const { posts: backendPosts, createPost, toggleLike, addComment, loading: postsLoading } = usePosts({
+    sortBy: selectedAlgorithm
+  })
   const [selectedContentType, setSelectedContentType] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState({
@@ -60,7 +62,7 @@ export function CrossFeed() {
     showMediaOnly: false,
     showUnreadOnly: false
   })
-  const [posts, setPosts] = useState(mockPosts)
+  const [posts, setPosts] = useState<any[]>([])
 
   // Función para manejar la creación de posts
   const handleCreatePost = async (content: string, facetId?: string, spaceId?: string, tags?: string[]) => {
@@ -85,6 +87,14 @@ export function CrossFeed() {
     }
   }
 
+  const handleLike = async (postId: string) => {
+    await toggleLike(postId)
+  }
+
+  const handleComment = async (postId: string, content: string) => {
+    await addComment(postId, content)
+  }
+
   // Simular feed cruzado
   const generateCrossFeed = () => {
     // En una implementación real, esto mezclaría contenido de:
@@ -94,34 +104,34 @@ export function CrossFeed() {
     // - Contenido trending
     // - Basado en el algoritmo seleccionado
     
-    // Usar posts del backend si están disponibles, sino usar mockPosts
-    let filteredPosts = [...(backendPosts.length > 0 ? backendPosts : mockPosts)]
+    // Usar posts del backend exclusivamente para evitar que los mock sobreescriban
+    let filteredPosts = [...backendPosts]
 
     // Aplicar filtros
     if (filters.showMediaOnly) {
-      filteredPosts = filteredPosts.filter(post => post.images && post.images.length > 0)
+      filteredPosts = filteredPosts.filter(post => post.media && post.media.length > 0)
     }
 
     // Aplicar algoritmo
     switch (selectedAlgorithm) {
       case "chronological":
-        filteredPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        // Offloaded to server-side query sorting
         break
       case "popular":
-        filteredPosts.sort((a, b) => (b.likes + b.comments.length + b.shares) - (a.likes + a.comments.length + a.shares))
+        // Offloaded to server-side query sorting
         break
       case "relevant":
         // Simular relevancia basada en facetas activas
         filteredPosts.sort((a, b) => {
           const activeFacet = user?.facets?.find(f => f.isActive)
-          if (activeFacet && a.tags.includes(activeFacet.category)) return -1
+          if (activeFacet && a.tags?.includes(activeFacet.category)) return -1
           return 0
         })
         break
       case "mixed":
         // Combinación de relevancia y popularidad
         filteredPosts.sort((a, b) => {
-          const relevanceScore = a.tags.includes(user?.facets?.find(f => f.isActive)?.category || "") ? 10 : 0
+          const relevanceScore = a.tags?.includes(user?.facets?.find(f => f.isActive)?.category || "") ? 10 : 0
           const popularityScore = (b.likes + b.comments.length + b.shares) * 0.1
           const recencyScore = (new Date().getTime() - new Date(b.createdAt).getTime()) * 0.000001
           return (relevanceScore + popularityScore - recencyScore) - (relevanceScore + popularityScore - recencyScore)
@@ -145,7 +155,7 @@ export function CrossFeed() {
       {/* Feed Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r  bg-clip-text">
+          <h1 className="text-3xl font-bold text-primary">
             Feed
           </h1>
         </div>
@@ -327,7 +337,12 @@ export function CrossFeed() {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
                 >
-                  <PostCard post={post} />
+                  <PostCard 
+                    post={post} 
+                    onLike={handleLike}
+                    onComment={handleComment}
+                    limitComments={true}
+                  />
                 </motion.div>
               ))}
             </AnimatePresence>

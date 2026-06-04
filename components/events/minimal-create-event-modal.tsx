@@ -20,7 +20,7 @@ export function MinimalCreateEventModal({ children, spaceId }: MinimalCreateEven
   const [title, setTitle] = useState("")
 
   const { toast } = useToast()
-  const { createEvent } = useEvents()
+  const { createEvent } = useEvents({ autoFetch: false })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

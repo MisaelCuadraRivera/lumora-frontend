@@ -12,29 +12,39 @@ import {
   ArrowRight
 } from "lucide-react"
 import type { Event } from "@/types"
+import { getMediaUrl } from "@/lib/mediaService"
 
 interface LiveEventsBannerProps {
   events: Event[]
 }
 
 export function LiveEventsBanner({ events }: LiveEventsBannerProps) {
-  const formatTime = (date: Date) => {
-    return new Intl.DateTimeFormat('es-MX', {
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date)
+  const formatTime = (dateInput: Date | string) => {
+    try {
+      const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput
+      if (!date || isNaN(date.getTime())) {
+        return ''
+      }
+      return new Intl.DateTimeFormat('es-MX', {
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date)
+    } catch (error) {
+      console.error('Error formatting time:', error, 'Date value:', dateInput)
+      return ''
+    }
   }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-lg bg-gradient-to-r from-red-500 via-red-600 to-red-700 p-1"
+      className="relative overflow-hidden rounded-lg bg-red-500 p-1"
     >
       <div className="relative bg-background rounded-lg p-4">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-600" />
+          <div className="absolute inset-0 bg-red-500" />
         </div>
 
         <div className="relative z-10">
@@ -74,7 +84,7 @@ export function LiveEventsBanner({ events }: LiveEventsBannerProps) {
                       {/* Event Image */}
                       <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted">
                         <img 
-                          src={event.coverImage || event.images[0] || "/placeholder.svg"} 
+                          src={getMediaUrl(event.image || event.banner)} 
                           alt={event.title}
                           className="w-full h-full object-cover"
                         />
