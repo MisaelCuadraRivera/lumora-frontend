@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiService } from '@/lib/api'
 import { Event } from '@/types'
 
-export function useEvents() {
+export function useEvents(options: { autoFetch?: boolean } = {}) {
+  const { autoFetch = true } = options
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -13,7 +14,8 @@ export function useEvents() {
     setLoading(true)
     setError(null)
     try {
-      const response = await apiService.getPublicEvents(page, limit, filters)
+      const mergedFilters = { includePast: true, ...filters }
+      const response = await apiService.getPublicEvents(page, limit, mergedFilters)
       console.log('Response from getPublicEvents:', response)
       if (response.success && response.data) {
         const eventsData = response.data.events || response.data
@@ -202,8 +204,10 @@ export function useEvents() {
 
   // Cargar eventos públicos por defecto
   useEffect(() => {
-    loadEvents()
-  }, [loadEvents])
+    if (autoFetch) {
+      loadEvents()
+    }
+  }, [loadEvents, autoFetch])
 
   return {
     events,

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +10,21 @@ import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth"
 import { apiService } from "@/lib/api"
+import { getMediaUrl } from "@/lib/mediaService"
 import { Event } from "@/types"
+import { useEvents } from "@/hooks/useEvents"
+import { EditEventModal } from "@/components/events/edit-event-modal"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { 
   Calendar, 
   Clock, 
@@ -28,62 +42,114 @@ import {
   User,
   Tag,
   MessageCircle,
-  Star
+  Star,
+  Edit3,
+  Trash2
 } from "lucide-react"
+
+const categoryTranslations: Record<string, string> = {
+  conference: "Conferencia",
+  workshop: "Taller",
+  meetup: "Meetup",
+  concert: "Concierto",
+  exhibition: "Exposición",
+  sports: "Deportes",
+  other: "Otro"
+}
+
+const translateTagOrCategory = (val: string) => {
+  if (!val) return ""
+  const lower = val.toLowerCase().trim()
+  return categoryTranslations[lower] || val
+}
 
 export default function EventDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
   const { user } = useAuth()
+  const { deleteEvent } = useEvents({ autoFetch: false })
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isAttending, setIsAttending] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
 
   const eventId = params.id as string
 
-  useEffect(() => {
-    const loadEvent = async () => {
-      try {
-        setLoading(true)
-        
-        // Usar directamente el método que no incrementa vistas para evitar el error
-        console.log('Loading event without incrementing views to avoid viewsCount error')
-        const response = await apiService.getEventByIdWithoutIncrement(eventId)
-        
-        if (response.success && response.data) {
-          setEvent(response.data)
-          
-          // Verificar si el usuario está registrado
-          if (user && response.data.attendees) {
-            const userAttendance = response.data.attendees.find(
-              (attendee: any) => attendee.userId === user.id
-            )
-            setIsAttending(!!userAttendance)
-          }
-        } else {
-          setError(response.message || 'Evento no encontrado')
-        }
-      } catch (err: any) {
-        console.error('Error loading event:', err)
-        setError(err.message || 'Error cargando evento')
-      } finally {
-        setLoading(false)
-      }
-    }
+  const isCreator = !!(user && event && (user.id === event.userId || user.id === event.creator?.id))
 
+  const loadEvent = useCallback(async () => {
+    try {
+      setLoading(true)
+      
+      // Usar directamente el método que no incrementa vistas para evitar el error
+      console.log('Loading event without incrementing views to avoid viewsCount error')
+      const response = await apiService.getEventByIdWithoutIncrement(eventId)
+      
+      if (response.success && response.data) {
+        setEvent(response.data)
+        
+        // Verificar si el usuario está registrado
+        if (user && response.data.attendees) {
+          const userAttendance = response.data.attendees.find(
+            (attendee: any) => attendee.userId === user.id
+          )
+          setIsAttending(!!userAttendance)
+        }
+      } else {
+        setError(response.message || 'Evento no encontrado')
+      }
+    } catch (err: any) {
+      console.error('Error loading event:', err)
+      setError(err.message || 'Error cargando evento')
+    } finally {
+      setLoading(false)
+    }
+  }, [eventId, user])
+
+  useEffect(() => {
     if (eventId) {
       loadEvent()
     }
-  }, [eventId, user])
+  }, [eventId, loadEvent])
+
+  const handleDelete = async () => {
+    try {
+      const response = await deleteEvent(eventId)
+      if (response.success) {
+        toast({
+          title: "Éxito",
+          description: "Evento eliminado correctamente",
+        })
+        router.push('/events')
+      } else {
+        throw new Error(response.message || "Error al eliminar el evento")
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "No se pudo eliminar el evento",
+        variant: "destructive"
+      })
+    }
+  }
 
   const handleAttend = async () => {
     if (!user) {
       toast({
         title: "Inicia sesión",
         description: "Necesitas iniciar sesión para registrarte en eventos",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (isCreator) {
+      toast({
+        title: "Acción denegada",
+        description: "Como organizador del evento, no puedes registrarte como asistente.",
         variant: "destructive"
       })
       return
@@ -161,12 +227,28 @@ export default function EventDetailPage() {
     }
   }
 
-  const formatPrice = (price: number, currency: string) => {
-    if (price === 0) return "Gratis"
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: currency,
-    }).format(price)
+  const formatPrice = (priceInput: any, currencyInput: string) => {
+    const price = typeof priceInput === 'string' ? parseFloat(priceInput) : priceInput
+    if (price === undefined || price === null || isNaN(price) || price === 0) return "Gratis"
+    
+    // Normalize currency to uppercase and trim spaces
+    const currency = (currencyInput || 'MXN').trim().toUpperCase()
+    
+    try {
+      const formattedPrice = new Intl.NumberFormat('es-MX', {
+        style: 'currency',
+        currency: currency,
+      }).format(price)
+      
+      // If it's MXN, make sure it says MXN to avoid confusion with USD/other currencies using $
+      if (currency === 'MXN') {
+        return `${formattedPrice} MXN`
+      }
+      return formattedPrice
+    } catch (e) {
+      console.error('Error formatting price in EventDetailPage:', e)
+      return `${currency} ${price.toFixed(2)}`
+    }
   }
 
   const getLocationText = () => {
@@ -278,7 +360,7 @@ export default function EventDetailPage() {
             {/* Imagen del Evento */}
             <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
               <img 
-                src={event.image || event.banner || "/placeholder.svg"} 
+                src={getMediaUrl(event.banner || event.image)} 
                 alt={event.title}
                 className="w-full h-full object-cover"
               />
@@ -302,7 +384,7 @@ export default function EventDetailPage() {
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline">{event.category}</Badge>
+                      <Badge variant="outline">{translateTagOrCategory(event.category)}</Badge>
                       {event.isPublic ? (
                         <Badge variant="secondary" className="flex items-center gap-1">
                           <Globe className="w-3 h-3" />
@@ -424,7 +506,7 @@ export default function EventDetailPage() {
                     <div className="flex flex-wrap gap-2">
                       {event.tags.map((tag, index) => (
                         <Badge key={index} variant="secondary">
-                          {tag}
+                          {translateTagOrCategory(tag)}
                         </Badge>
                       ))}
                     </div>
@@ -442,7 +524,7 @@ export default function EventDetailPage() {
                       {event.speakers.map((speaker, index) => (
                         <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
                           <Avatar className="w-10 h-10">
-                            <AvatarImage src={speaker.avatar} />
+                            <AvatarImage src={getMediaUrl(speaker.avatar)} />
                             <AvatarFallback>
                               {speaker.name?.charAt(0).toUpperCase() || "S"}
                             </AvatarFallback>
@@ -473,14 +555,19 @@ export default function EventDetailPage() {
                       {formatPrice(event.price, event.currency)}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {event.price === 0 ? "Evento gratuito" : "Precio por persona"}
+                      {(typeof event.price === 'string' ? parseFloat(event.price) : event.price) === 0 ? "Evento gratuito" : "Precio por persona"}
                     </p>
                   </div>
 
                   <Separator />
 
                   <div className="space-y-3">
-                    {isSoldOut ? (
+                    {isCreator ? (
+                      <Button disabled className="w-full cursor-not-allowed border-muted-foreground/30 text-muted-foreground" variant="outline">
+                        <User className="w-4 h-4 mr-2" />
+                        Eres el organizador
+                      </Button>
+                    ) : isSoldOut ? (
                       <Button disabled className="w-full">
                         <Ticket className="w-4 h-4 mr-2" />
                         Agotado
@@ -500,6 +587,47 @@ export default function EventDetailPage() {
                       <Share2 className="w-4 h-4 mr-2" />
                       Compartir evento
                     </Button>
+
+                    {isCreator && (
+                      <div className="space-y-2 pt-3 border-t border-border/20 mt-2">
+                        <Button 
+                          onClick={() => setEditModalOpen(true)}
+                          className="w-full border-primary/30 text-primary hover:bg-primary/5 h-10 text-sm font-semibold"
+                          variant="outline"
+                        >
+                          <Edit3 className="w-4 h-4 mr-2" />
+                          Editar Evento
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              className="w-full bg-red-500 hover:bg-red-600 text-white h-10 text-sm font-semibold"
+                              variant="destructive"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Eliminar Evento
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>¿Estás completamente seguro?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta acción no se puede deshacer. Esto eliminará permanentemente el evento "{event.title}" y todos sus asistentes asociados.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={handleDelete}
+                                className="bg-red-500 hover:bg-red-600 text-white"
+                              >
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -513,7 +641,7 @@ export default function EventDetailPage() {
               <CardContent>
                 <div className="flex items-center gap-3">
                   <Avatar className="w-12 h-12">
-                    <AvatarImage src={event.creator?.avatar} />
+                    <AvatarImage src={getMediaUrl(event.creator?.avatar)} />
                     <AvatarFallback>
                       {event.creator?.username?.charAt(0).toUpperCase() || "U"}
                     </AvatarFallback>
@@ -535,7 +663,7 @@ export default function EventDetailPage() {
                 <CardContent>
                   <div className="flex items-center gap-3">
                     <Avatar className="w-12 h-12">
-                      <AvatarImage src={event.space.image} />
+                      <AvatarImage src={getMediaUrl(event.space?.image)} />
                       <AvatarFallback>
                         {event.space.name.charAt(0).toUpperCase()}
                       </AvatarFallback>
@@ -576,6 +704,15 @@ export default function EventDetailPage() {
           </div>
         </div>
       </div>
+
+      {event && (
+        <EditEventModal
+          event={event}
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          onSuccess={loadEvent}
+        />
+      )}
     </div>
   )
 }

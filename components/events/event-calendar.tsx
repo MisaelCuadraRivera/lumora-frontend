@@ -20,6 +20,7 @@ import {
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth } from "date-fns"
 import { es } from "date-fns/locale"
 import type { Event } from "@/types"
+import { getMediaUrl } from "@/lib/mediaService"
 
 interface EventCalendarProps {
   events: Event[]
@@ -233,7 +234,7 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
                   <div className="flex items-start gap-4">
                     <div className="relative w-24 h-16 rounded-lg overflow-hidden bg-muted">
                       <img 
-                        src={event.coverImage || event.images[0] || "/placeholder.svg"} 
+                        src={getMediaUrl(event.image || event.banner)} 
                         alt={event.title}
                         className="w-full h-full object-cover"
                       />

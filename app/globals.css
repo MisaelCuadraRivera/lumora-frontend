@@ -174,15 +174,15 @@
     --tw-ring-color: var(--highlight);
   }
 
-  /* Gradiente púrpura a cyan para botones especiales */
+  /* Fondos sólidos premium para botones especiales (antes gradientes) */
   .bg-gradient-primary-highlight {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--highlight) 100%);
+    background-color: var(--primary);
     color: var(--primary-foreground);
   }
 
   .bg-gradient-highlight-primary {
-    background: linear-gradient(135deg, var(--highlight) 0%, var(--primary) 100%);
-    color: var(--primary-foreground);
+    background-color: var(--highlight);
+    color: var(--highlight-foreground);
   }
 
   /* Estados hover con highlight */

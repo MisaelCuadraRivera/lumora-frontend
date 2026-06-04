@@ -220,7 +220,7 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                 {/* Checkout Button */}
                 <Button 
                   onClick={handleCheckout}
-                  className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   <CreditCard className="w-4 h-4 mr-2" />
                   Proceder al pago

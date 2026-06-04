@@ -18,6 +18,7 @@ interface CreateSpaceModalProps {
   children?: React.ReactNode
   isOpen?: boolean
   onClose?: () => void
+  facetId?: string
 }
 
 const spaceCategories = [
@@ -31,7 +32,7 @@ const spaceCategories = [
   { value: "tecnologia", label: "Tecnología", icon: "💻" }
 ]
 
-export function CreateSpaceModal({ children, isOpen, onClose }: CreateSpaceModalProps) {
+export function CreateSpaceModal({ children, isOpen, onClose, facetId }: CreateSpaceModalProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -43,7 +44,7 @@ export function CreateSpaceModal({ children, isOpen, onClose }: CreateSpaceModal
     tagInput: ""
   })
 
-  const { createSpace } = useSpaces()
+  const { createSpace } = useSpaces({ autoFetch: false })
 
   // Usar el estado externo si se proporciona, o el estado interno
   const modalOpen = isOpen !== undefined ? isOpen : open
@@ -99,6 +100,7 @@ export function CreateSpaceModal({ children, isOpen, onClose }: CreateSpaceModal
         category: formData.category,
         isPublic: formData.isPublic,
         tags: formData.tags,
+        facetId: facetId || undefined,
         settings: {
           modules: {
             chat: true,

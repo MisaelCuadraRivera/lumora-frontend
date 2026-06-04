@@ -53,7 +53,7 @@ export default function LoginPage() {
         setErrorMessage(result.message || "Error al iniciar sesión con Google");
       }
     } catch (error) {
-       setErrorMessage("Error inesperado al iniciar sesión con Google");
+      setErrorMessage("Error inesperado al iniciar sesión con Google");
     } finally {
       setIsLoading(false);
     }
@@ -186,7 +186,7 @@ export default function LoginPage() {
       } else {
         setErrorMessage(
           result.message ||
-            "Error en la autenticación. Verifica tus credenciales."
+          "Error en la autenticación. Verifica tus credenciales."
         );
       }
     } catch (error) {
@@ -249,18 +249,16 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setIsLogin(true)}
-                className={`cursor-pointer flex-1 py-3 px-4 text-sm font-medium transition-colors duration-200 relative z-10 ${
-                  isLogin ? "text-white" : "text-white/70 hover:text-white"
-                }`}
+                className={`cursor-pointer flex-1 py-3 px-4 text-sm font-medium transition-colors duration-200 relative z-10 ${isLogin ? "text-white" : "text-white/70 hover:text-white"
+                  }`}
               >
                 Inicia sesión
               </button>
               <button
                 type="button"
                 onClick={() => setIsLogin(false)}
-                className={`cursor-pointer flex-1 py-3 px-4 text-sm font-medium transition-colors duration-200 relative z-10 ${
-                  !isLogin ? "text-white" : "text-white/70 hover:text-white"
-                }`}
+                className={`cursor-pointer flex-1 py-3 px-4 text-sm font-medium transition-colors duration-200 relative z-10 ${!isLogin ? "text-white" : "text-white/70 hover:text-white"
+                  }`}
               >
                 Regístrate
               </button>
@@ -282,11 +280,10 @@ export default function LoginPage() {
                     onFocus={() => setFocusedField("email")}
                     onBlur={() => setFocusedField(null)}
                     required
-                    className={`w-full px-4 py-4 rounded-lg text-white backdrop-blur-sm transition-all duration-300 bg-transparent ${
-                      focusedField === "email"
+                    className={`w-full px-4 py-4 rounded-lg text-white backdrop-blur-sm transition-all duration-300 bg-transparent ${focusedField === "email"
                         ? "border-2 border-highlight/50 placeholder-white/50 focus:border-highlight focus:ring-2 focus:ring-highlight/20"
                         : "border border-white/20 placeholder-white/40 focus:border-white/40 focus:ring-2 focus:ring-white/10"
-                    }`}
+                      }`}
                   />
                 </div>
               </div>
@@ -331,11 +328,10 @@ export default function LoginPage() {
                             onFocus={() => setFocusedField("firstName")}
                             onBlur={() => setFocusedField(null)}
                             required={!isLogin}
-                            className={`w-full px-3 py-3 rounded-lg text-white backdrop-blur-sm transition-all duration-300 bg-transparent text-sm ${
-                              focusedField === "firstName"
+                            className={`w-full px-3 py-3 rounded-lg text-white backdrop-blur-sm transition-all duration-300 bg-transparent text-sm ${focusedField === "firstName"
                                 ? "border-2 border-highlight/50 placeholder-white/50 focus:border-highlight focus:ring-2 focus:ring-highlight/20"
                                 : "border border-white/20 placeholder-white/40 focus:border-white/40 focus:ring-2 focus:ring-white/10"
-                            }`}
+                              }`}
                           />
                         </div>
                       </div>
@@ -352,11 +348,10 @@ export default function LoginPage() {
                             onFocus={() => setFocusedField("lastName")}
                             onBlur={() => setFocusedField(null)}
                             required={!isLogin}
-                            className={`w-full px-3 py-3 rounded-lg text-white backdrop-blur-sm transition-all duration-300 bg-transparent text-sm ${
-                              focusedField === "lastName"
+                            className={`w-full px-3 py-3 rounded-lg text-white backdrop-blur-sm transition-all duration-300 bg-transparent text-sm ${focusedField === "lastName"
                                 ? "border-2 border-highlight/50 placeholder-white/50 focus:border-highlight focus:ring-2 focus:ring-highlight/20"
                                 : "border border-white/20 placeholder-white/40 focus:border-white/40 focus:ring-2 focus:ring-white/10"
-                            }`}
+                              }`}
                           />
                         </div>
                       </div>
@@ -386,11 +381,10 @@ export default function LoginPage() {
                           onFocus={() => setFocusedField("username")}
                           onBlur={() => setFocusedField(null)}
                           required={!isLogin}
-                          className={`w-full px-4 py-4 rounded-lg text-white backdrop-blur-sm transition-all duration-300 bg-transparent ${
-                            focusedField === "username"
+                          className={`w-full px-4 py-4 rounded-lg text-white backdrop-blur-sm transition-all duration-300 bg-transparent ${focusedField === "username"
                               ? "border-2 border-highlight/50 placeholder-white/50 focus:border-highlight focus:ring-2 focus:ring-highlight/20"
                               : "border border-white/20 placeholder-white/40 focus:border-white/40 focus:ring-2 focus:ring-white/10"
-                          }`}
+                            }`}
                         />
                       </div>
                       {/* Sugerencias de nombre de usuario */}
@@ -434,11 +428,10 @@ export default function LoginPage() {
                     onFocus={() => setFocusedField("password")}
                     onBlur={() => setFocusedField(null)}
                     required
-                    className={`w-full px-4 pr-12 py-4 rounded-lg text-white backdrop-blur-sm transition-all duration-300 bg-transparent ${
-                      focusedField === "password"
+                    className={`w-full px-4 pr-12 py-4 rounded-lg text-white backdrop-blur-sm transition-all duration-300 bg-transparent ${focusedField === "password"
                         ? "border-2 border-highlight/50 placeholder-white/50 focus:border-highlight focus:ring-2 focus:ring-highlight/20"
                         : "border border-white/20 placeholder-white/40 focus:border-white/40 focus:ring-2 focus:ring-white/10"
-                    }`}
+                      }`}
                   />
                   <button
                     type="button"
@@ -460,20 +453,18 @@ export default function LoginPage() {
                       {[1, 2, 3, 4, 5].map((level) => (
                         <div
                           key={level}
-                          className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                            level <= passwordStrength
+                          className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${level <= passwordStrength
                               ? getPasswordStrengthBarColor(passwordStrength)
                               : "bg-white/20"
-                          }`}
+                            }`}
                         />
                       ))}
                     </div>
                     {/* Etiqueta de fuerza */}
                     <div className="flex items-center justify-between">
                       <p
-                        className={`text-xs font-medium ${
-                          getPasswordStrengthLabel(passwordStrength).color
-                        }`}
+                        className={`text-xs font-medium ${getPasswordStrengthLabel(passwordStrength).color
+                          }`}
                       >
                         {getPasswordStrengthLabel(passwordStrength).text}
                       </p>
@@ -522,15 +513,14 @@ export default function LoginPage() {
                         onFocus={() => setFocusedField("confirmPassword")}
                         onBlur={() => setFocusedField(null)}
                         required={!isLogin}
-                        className={`w-full px-4 pr-24 py-4 rounded-lg text-white backdrop-blur-sm transition-all duration-300 bg-transparent ${
-                          focusedField === "confirmPassword"
+                        className={`w-full px-4 pr-24 py-4 rounded-lg text-white backdrop-blur-sm transition-all duration-300 bg-transparent ${focusedField === "confirmPassword"
                             ? "border-2 border-highlight/50 placeholder-white/50 focus:border-highlight focus:ring-2 focus:ring-highlight/20"
                             : confirmPassword.length > 0
-                            ? password === confirmPassword
-                              ? "border border-green-500/50 placeholder-white/40 focus:border-green-500/50 focus:ring-2 focus:ring-green-500/10"
-                              : "border border-red-500/50 placeholder-white/40 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10"
-                            : "border border-white/20 placeholder-white/40 focus:border-white/40 focus:ring-2 focus:ring-white/10"
-                        }`}
+                              ? password === confirmPassword
+                                ? "border border-green-500/50 placeholder-white/40 focus:border-green-500/50 focus:ring-2 focus:ring-green-500/10"
+                                : "border border-red-500/50 placeholder-white/40 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10"
+                              : "border border-white/20 placeholder-white/40 focus:border-white/40 focus:ring-2 focus:ring-white/10"
+                          }`}
                       />
                       {/* Indicador de coincidencia */}
                       {confirmPassword.length > 0 && (
@@ -561,11 +551,10 @@ export default function LoginPage() {
                       <motion.p
                         initial={{ opacity: 0, y: -5 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`text-xs mt-2 ${
-                          password === confirmPassword
+                        className={`text-xs mt-2 ${password === confirmPassword
                             ? "text-green-400"
                             : "text-red-400"
-                        }`}
+                          }`}
                       >
                         {password === confirmPassword
                           ? "✓ Las contraseñas coinciden"
@@ -599,7 +588,7 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="cursor-pointer w-full py-4 bg-gradient-highlight-primary hover:bg-gradient-primary-highlight text-white font-semibold rounded-lg shadow-xl transition-all duration-300 border-0"
+                  className="cursor-pointer w-full py-4 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg shadow-xl transition-all duration-300 border-0"
                 >
                   {isLoading && (
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -623,7 +612,7 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   onClick={handleGoogleLogin}
-                  className="cursor-pointer h-11 bg-white/95 border-white/20 text-gray-100 hover:bg-white hover:border-gray-300 rounded-lg backdrop-blur-sm transition-all duration-300 flex items-center justify-center gap-2"
+                  className="cursor-pointer h-11 bg-white/95 border-white/20 hover:bg-white hover:border-gray-300 rounded-lg backdrop-blur-sm transition-all duration-300 flex items-center justify-center gap-2"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path

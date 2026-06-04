@@ -10,12 +10,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth"
-import { mockUsers, getUserById } from "@/data"
-import { User, UserPlus, UserMinus, UserX, Flag, MessageSquare, Share2, MoreHorizontal } from "lucide-react"
+import { apiService } from "@/lib/api"
+import { useRouter } from "next/navigation"
+import { User, UserPlus, UserMinus, UserX, Flag, MessageSquare, Share2, MoreHorizontal, Loader2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 interface SocialActionsProps {
-  targetUser: User
+  targetUser: any
   onFollowChange?: (userId: string, isFollowing: boolean) => void
   onBlockChange?: (userId: string, isBlocked: boolean) => void
 }
@@ -23,6 +24,7 @@ interface SocialActionsProps {
 export function SocialActions({ targetUser, onFollowChange, onBlockChange }: SocialActionsProps) {
   const { user: currentUser } = useAuth()
   const { toast } = useToast()
+  const router = useRouter()
   const [isFollowing, setIsFollowing] = useState(
     currentUser ? targetUser.followers.includes(currentUser.id) : false
   )
@@ -32,33 +34,67 @@ export function SocialActions({ targetUser, onFollowChange, onBlockChange }: Soc
   const [showReportDialog, setShowReportDialog] = useState(false)
   const [reportReason, setReportReason] = useState("")
   const [reportDescription, setReportDescription] = useState("")
+  const [loading, setLoading] = useState(false)
 
   if (!currentUser || currentUser.id === targetUser.id) {
     return null
   }
 
-  const handleFollow = () => {
-    setIsFollowing(!isFollowing)
-    onFollowChange?.(targetUser.id, !isFollowing)
+  const handleFollow = async () => {
+    if (loading) return
+    setLoading(true)
     
-    toast({
-      title: isFollowing ? "Dejaste de seguir" : "Siguiendo",
-      description: isFollowing 
-        ? `Ya no sigues a ${targetUser.username}` 
-        : `Ahora sigues a ${targetUser.username}`,
-    })
+    try {
+      const response = await apiService.toggleFollow(targetUser.id)
+      if (response.success) {
+        const nextState = !isFollowing
+        setIsFollowing(nextState)
+        onFollowChange?.(targetUser.id, nextState)
+        
+        toast({
+          title: nextState ? "Siguiendo" : "Dejaste de seguir",
+          description: nextState 
+            ? `Ahora sigues a ${targetUser.username}` 
+            : `Ya no sigues a ${targetUser.username}`,
+        })
+      } else {
+        throw new Error(response.message || "Error al procesar la solicitud")
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo completar la acción. Inténtalo de nuevo.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleBlock = () => {
-    setIsBlocked(!isBlocked)
-    onBlockChange?.(targetUser.id, !isBlocked)
-    
-    toast({
-      title: isBlocked ? "Desbloqueado" : "Bloqueado",
-      description: isBlocked 
-        ? `Desbloqueaste a ${targetUser.username}` 
-        : `Bloqueaste a ${targetUser.username}`,
-    })
+  const handleBlock = async () => {
+    try {
+      const response = await apiService.toggleBlock(targetUser.id)
+      if (response.success) {
+        const nextState = !isBlocked
+        setIsBlocked(nextState)
+        onBlockChange?.(targetUser.id, nextState)
+        
+        toast({
+          title: nextState ? "Bloqueado" : "Desbloqueado",
+          description: nextState 
+            ? `Bloqueaste a ${targetUser.username}` 
+            : `Desbloqueaste a ${targetUser.username}`,
+        })
+      } else {
+        throw new Error(response.message || "Error al procesar la solicitud")
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo cambiar el estado de bloqueo.",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleReport = () => {
@@ -83,12 +119,10 @@ export function SocialActions({ targetUser, onFollowChange, onBlockChange }: Soc
   }
 
   const handleMessage = () => {
-    // Redirigir a mensajes privados
-    window.location.href = `/messages?user=${targetUser.username}`
+    router.push(`/messages?user=${targetUser.username}`)
   }
 
   const handleShare = () => {
-    // Compartir perfil
     if (navigator.share) {
       navigator.share({
         title: `${targetUser.username} en Lumora`,
@@ -104,15 +138,22 @@ export function SocialActions({ targetUser, onFollowChange, onBlockChange }: Soc
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
       <Button
         variant={isFollowing ? "outline" : "default"}
         size="sm"
         onClick={handleFollow}
-        className="gap-2"
+        className="gap-2 min-w-[120px]"
+        disabled={loading}
       >
-        {isFollowing ? <UserMinus className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
-        {isFollowing ? "Dejar de seguir" : "Seguir"}
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : isFollowing ? (
+          <UserMinus className="h-4 w-4" />
+        ) : (
+          <UserPlus className="h-4 w-4" />
+        )}
+        {loading ? "Cargando..." : (isFollowing ? "Dejar de seguir" : "Seguir")}
       </Button>
 
       <Button variant="outline" size="sm" onClick={handleMessage} className="gap-2">

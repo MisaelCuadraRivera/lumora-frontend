@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useParams } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -13,7 +13,11 @@ import { SpaceCard } from "@/components/spaces/space-card"
 import { SocialActions } from "@/components/social/social-actions"
 import { ProfileStats } from "@/components/social/profile-stats"
 import { ProfileAnalytics } from "@/components/social/profile-analytics"
-import { getUserByUsername, mockUsers, mockSpaces, mockPosts } from "@/data"
+import { ProfileHeader } from "@/components/profile/profile-header"
+import { FacetCard } from "@/components/profile/facet-card"
+import { apiService } from "@/lib/api"
+import { useAuth } from "@/lib/auth"
+import { useToast } from "@/hooks/use-toast"
 import { 
   ArrowLeft, 
   Users, 
@@ -30,31 +34,101 @@ import {
   Hash,
   FileText,
   Palette,
-  BarChart3
+  BarChart3,
+  Loader2
 } from "lucide-react"
 import Link from "next/link"
 
 export default function UserProfilePage() {
   const params = useParams()
   const username = params.username as string
+  const router = useRouter()
+  const { toast } = useToast()
+  const { user: currentUser } = useAuth()
+
+  const [profileUser, setProfileUser] = useState<any>(null)
+  const [profilePosts, setProfilePosts] = useState<any[]>([])
+  const [profileSpaces, setProfileSpaces] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("posts")
   const [isFollowing, setIsFollowing] = useState(false)
-  const [isOwner, setIsOwner] = useState(false)
 
-  const user = getUserByUsername(username)
-  const currentUser = mockUsers[0] // Simulate current user
+  // Fetch profile dynamically
+  useEffect(() => {
+    let active = true;
+    const fetchProfileData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const userResponse = await apiService.getUserByUsername(username);
+        if (!active) return;
+        
+        if (userResponse.success && userResponse.data) {
+          const uData = userResponse.data;
+          setProfileUser(uData);
+          
+          if (currentUser && uData.followers) {
+            setIsFollowing(uData.followers.includes(currentUser.id));
+          }
+
+          // Fetch user posts
+          const postsResponse = await apiService.getUserPosts(uData.id);
+          if (active && postsResponse.success) {
+            const pData = postsResponse.data?.posts || postsResponse.data || [];
+            setProfilePosts(Array.isArray(pData) ? pData : []);
+          }
+
+          // Fetch spaces
+          try {
+            const spacesResponse = await apiService.getSpaces();
+            if (active && spacesResponse.success) {
+              const sData = spacesResponse.data?.spaces || spacesResponse.data || [];
+              if (Array.isArray(sData)) {
+                setProfileSpaces(sData.filter((space: any) => space.userId === uData.id || space.isJoined));
+              }
+            }
+          } catch (e) {
+            console.error('Error fetching profile spaces:', e);
+          }
+
+        } else {
+          setError(userResponse.message || "Usuario no encontrado");
+        }
+      } catch (err: any) {
+        if (!active) return;
+        setError(err.message || "Error al cargar el perfil");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    if (username) {
+      fetchProfileData();
+    }
+    return () => {
+      active = false;
+    };
+  }, [username, currentUser]);
 
   // Check if this is the current user's profile
-  if (user?.id === currentUser?.id) {
-    setIsOwner(true)
+  const isOwner = !!(currentUser && profileUser && currentUser.id === profileUser.id)
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
-  if (!user) {
+  if (error || !profileUser) {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center py-12">
           <h1 className="text-2xl font-bold mb-2">Usuario no encontrado</h1>
-          <p className="text-muted-foreground mb-4">El usuario que buscas no existe.</p>
+          <p className="text-muted-foreground mb-4">{error || "El usuario que buscas no existe."}</p>
           <Link href="/feed">
             <Button>Volver al Feed</Button>
           </Link>
@@ -64,44 +138,134 @@ export default function UserProfilePage() {
   }
 
   // Get user's posts
-  const userPosts = mockPosts.filter(post => post.authorId === user.id)
+  const userPosts = profilePosts
   
   // Get user's joined spaces
-  const userSpaces = mockSpaces.filter(space => space.isJoined)
+  const userSpaces = profileSpaces
 
-  const handleFollow = () => {
-    setIsFollowing(!isFollowing)
-    // TODO: Implement follow/unfollow API call
+  // Get public facets
+  const publicFacets = (profileUser.facets || []).filter(
+    (facet: any) => facet.privacy === "public" || facet.isPublic === true
+  )
+
+  const handleFollow = async () => {
+    try {
+      const response = await apiService.toggleFollow(user.id)
+      if (response.success) {
+        setIsFollowing(!isFollowing)
+        toast({
+          title: !isFollowing ? "Siguiendo" : "Dejaste de seguir",
+          description: !isFollowing 
+            ? `Ahora sigues a ${user.username}` 
+            : `Ya no sigues a ${user.username}`,
+        })
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo cambiar el estado de seguimiento.",
+        variant: "destructive"
+      })
+    }
   }
 
   const handleMessage = () => {
-    // TODO: Navigate to messages
-    console.log("Navigate to messages with:", user.username)
+    router.push(`/messages?user=${user.username}`)
   }
 
   const handleShare = () => {
-    // TODO: Implement share profile
-    console.log("Share profile:", user.username)
+    if (navigator.share) {
+      navigator.share({
+        title: `${user.username} en Lumora`,
+        url: `/user/${user.username}`,
+      })
+    } else {
+      navigator.clipboard.writeText(`${window.location.origin}/user/${user.username}`)
+      toast({
+        title: "Enlace copiado",
+        description: "El enlace del perfil se copió al portapapeles",
+      })
+    }
   }
 
-  const handleLike = (postId: string) => {
-    console.log("Liked post:", postId)
+  const handleLike = async (postId: string) => {
+    try {
+      await apiService.toggleLike(postId)
+      toast({
+        title: "Reacción guardada",
+        description: "Tu interacción ha sido registrada.",
+      })
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo procesar el me gusta.",
+        variant: "destructive"
+      })
+    }
   }
 
-  const handleComment = (postId: string, content: string) => {
-    console.log("Comment on post:", postId, content)
+  const handleComment = async (postId: string, content: string) => {
+    try {
+      await apiService.addComment(postId, content)
+      toast({
+        title: "Comentario publicado",
+        description: "Tu comentario ha sido publicado exitosamente.",
+      })
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo publicar el comentario.",
+        variant: "destructive"
+      })
+    }
   }
 
   const handleSharePost = (postId: string) => {
-    console.log("Shared post:", postId)
+    navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`)
+    toast({
+      title: "Enlace de publicación copiado",
+      description: "El enlace se copió al portapapeles",
+    })
   }
 
-  const handleJoinSpace = (spaceId: string) => {
-    console.log("Joining space:", spaceId)
+  const handleJoinSpace = async (spaceId: string) => {
+    try {
+      const response = await apiService.joinSpace(spaceId)
+      if (response.success) {
+        toast({
+          title: "Te has unido",
+          description: "Te has unido al espacio exitosamente.",
+        })
+      } else {
+        throw new Error(response.message)
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo unir al espacio.",
+        variant: "destructive"
+      })
+    }
   }
 
-  const handleLeaveSpace = (spaceId: string) => {
-    console.log("Leaving space:", spaceId)
+  const handleLeaveSpace = async (spaceId: string) => {
+    try {
+      const response = await apiService.leaveSpace(spaceId)
+      if (response.success) {
+        toast({
+          title: "Has salido",
+          description: "Has salido del espacio exitosamente.",
+        })
+      } else {
+        throw new Error(response.message)
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo salir del espacio.",
+        variant: "destructive"
+      })
+    }
   }
 
   return (
@@ -115,78 +279,36 @@ export default function UserProfilePage() {
           </Button>
         </Link>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            {user.username}
+          <h1 className="text-xl font-bold text-foreground">
+            Perfil de {profileUser.username}
           </h1>
         </div>
-        {!isOwner && (
-          <SocialActions 
-            targetUser={user}
-            onFollowChange={(userId, isFollowing) => setIsFollowing(isFollowing)}
-          />
-        )}
       </div>
-
+ 
       {/* Profile Header */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
-        {/* Cover Image */}
-        <div className="h-48 bg-gradient-to-r from-primary/20 to-accent/20 relative">
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-        </div>
-
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Avatar */}
-            <div className="flex-shrink-0">
-              <Avatar className="h-24 w-24 border-4 border-background">
-                <AvatarImage src={user.avatar} />
-                <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                  {user.username.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-
-            {/* Profile Info */}
-            <div className="flex-1 space-y-4">
-              <div>
-                <h2 className="text-2xl font-bold">{user.username}</h2>
-                <p className="text-muted-foreground">{user.bio}</p>
-              </div>
-
-              {/* Stats */}
-              <ProfileStats user={user} />
-
-              {/* Active Facets */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Facetas activas:</span>
-                {user.facets.filter(f => f.isActive).map((facet) => (
-                  <Badge key={facet.id} variant="secondary" className="gap-1">
-                    <Palette className="h-3 w-3" />
-                    {facet.name}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
+      <ProfileHeader 
+        user={profileUser} 
+        isOwner={isOwner} 
+        onEdit={() => router.push('/settings')} 
+        onFollowChange={(userId, isFollowingState) => setIsFollowing(isFollowingState)}
+      />
+ 
       {/* Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="posts" className="gap-2">
+        <TabsList className="w-full flex md:grid md:grid-cols-4 overflow-x-auto whitespace-nowrap scrollbar-none justify-start md:justify-center p-1">
+          <TabsTrigger value="posts" className="gap-2 flex-shrink-0">
             <FileText className="h-4 w-4" />
             Posts ({userPosts.length})
           </TabsTrigger>
-          <TabsTrigger value="spaces" className="gap-2">
+          <TabsTrigger value="spaces" className="gap-2 flex-shrink-0">
             <Hash className="h-4 w-4" />
             Espacios ({userSpaces.length})
           </TabsTrigger>
-          <TabsTrigger value="facets" className="gap-2">
+          <TabsTrigger value="facets" className="gap-2 flex-shrink-0">
             <Palette className="h-4 w-4" />
-            Facetas ({user.facets.length})
+            Facetas ({publicFacets.length})
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-2">
+          <TabsTrigger value="analytics" className="gap-2 flex-shrink-0">
             <BarChart3 className="h-4 w-4" />
             Analytics
           </TabsTrigger>
@@ -212,7 +334,7 @@ export default function UserProfilePage() {
                 <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No hay posts aún</h3>
                 <p className="text-muted-foreground">
-                  {user.username} aún no ha publicado nada
+                  {profileUser.username} aún no ha publicado nada
                 </p>
               </CardContent>
             </Card>
@@ -237,7 +359,7 @@ export default function UserProfilePage() {
                 <Hash className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No hay espacios</h3>
                 <p className="text-muted-foreground">
-                  {user.username} no se ha unido a ningún espacio aún
+                  {profileUser.username} no se ha unido a ningún espacio aún
                 </p>
               </CardContent>
             </Card>
@@ -245,40 +367,32 @@ export default function UserProfilePage() {
         </TabsContent>
 
         <TabsContent value="facets" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {user.facets.map((facet) => (
-              <Card key={facet.id} className="border-border/50 bg-card/50 backdrop-blur-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={facet.avatar} />
-                      <AvatarFallback className="bg-primary/20 text-primary">
-                        {facet.name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{facet.name}</h3>
-                      <p className="text-sm text-muted-foreground">{facet.description}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Badge variant="outline" className="text-xs capitalize">
-                          {facet.category}
-                        </Badge>
-                        {facet.isActive && (
-                          <Badge variant="default" className="text-xs">
-                            Activa
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {publicFacets.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {publicFacets.map((facet) => (
+                <FacetCard
+                  key={facet.id}
+                  facet={facet}
+                  isOwner={false}
+                  onView={() => {}}
+                />
+              ))}
+            </div>
+          ) : (
+            <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+              <CardContent className="p-12 text-center">
+                <Palette className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No hay facetas públicas</h3>
+                <p className="text-muted-foreground">
+                  {profileUser.username} no ha configurado ninguna faceta como pública
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
-          <ProfileAnalytics user={user} />
+          <ProfileAnalytics user={profileUser} />
         </TabsContent>
       </Tabs>
     </div>

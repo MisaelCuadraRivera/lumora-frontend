@@ -69,7 +69,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTimeout(async () => {
             try {
               const response = await apiService.verifyToken()
-              if (!response.success) {
+              if (response.success && response.data) {
+                // Token válido, sincronizar caché con los datos más frescos
+                const userData = response.data as ProfileResponseData
+                const frontendUser: User = {
+                  id: userData.id,
+                  username: userData.username,
+                  email: userData.email,
+                  firstName: userData.firstName,
+                  lastName: userData.lastName,
+                  avatar: userData.avatar || "/diverse-user-avatars.png",
+                  bio: userData.bio || "",
+                  createdAt: new Date(userData.createdAt),
+                  facets: userData.facets || [],
+                  isOnline: true,
+                  isVerified: userData.isVerified || false,
+                  preferences: userData.preferences || {},
+                  followers: userData.followers || [],
+                  following: userData.following || [],
+                  blockedUsers: userData.blockedUsers || [],
+                  stats: userData.stats || {
+                    posts: 0,
+                    followers: 0,
+                    following: 0,
+                    likes: 0,
+                    views: 0
+                  }
+                }
+                setUser(frontendUser)
+                localStorage.setItem("lumora_user", JSON.stringify(frontendUser))
+              } else {
                 // Token inválido, limpiar
                 localStorage.removeItem("lumora_token")
                 localStorage.removeItem("lumora_user")

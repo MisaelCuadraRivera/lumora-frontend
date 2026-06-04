@@ -48,8 +48,10 @@ const contentTypes = [
 
 export function CrossFeed() {
   const { user } = useAuth()
-  const { posts: backendPosts, createPost, toggleLike, addComment, loading: postsLoading } = usePosts()
   const [selectedAlgorithm, setSelectedAlgorithm] = useState("mixed")
+  const { posts: backendPosts, createPost, toggleLike, addComment, loading: postsLoading } = usePosts({
+    sortBy: selectedAlgorithm
+  })
   const [selectedContentType, setSelectedContentType] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState({
@@ -113,10 +115,10 @@ export function CrossFeed() {
     // Aplicar algoritmo
     switch (selectedAlgorithm) {
       case "chronological":
-        filteredPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        // Offloaded to server-side query sorting
         break
       case "popular":
-        filteredPosts.sort((a, b) => (b.likes + b.comments.length + b.shares) - (a.likes + a.comments.length + a.shares))
+        // Offloaded to server-side query sorting
         break
       case "relevant":
         // Simular relevancia basada en facetas activas
@@ -153,7 +155,7 @@ export function CrossFeed() {
       {/* Feed Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r  bg-clip-text">
+          <h1 className="text-3xl font-bold text-primary">
             Feed
           </h1>
         </div>

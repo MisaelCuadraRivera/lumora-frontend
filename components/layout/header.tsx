@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/popover'
 import { useAuth } from '@/lib/auth'
 import { mockUsers, mockSpaces, mockPosts } from '@/data'
-import { Search, Settings, LogOut, User, Palette, Hash, Users, FileText, X } from 'lucide-react'
+import { Search, Settings, LogOut, User, Palette, Hash, Users, FileText, X, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LumoraLogo } from '@/components/ui/lumora-logo'
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
@@ -38,6 +38,7 @@ import { NotificationDropdown } from '@/components/notifications/NotificationDro
 export function Header() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isMobileSearchVisible, setIsMobileSearchVisible] = useState(false)
   const { user, logout } = useAuth()
   const router = useRouter()
   const searchRef = useRef<HTMLDivElement>(null)
@@ -59,6 +60,7 @@ export function Header() {
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
       setIsSearchOpen(false)
+      setIsMobileSearchVisible(false)
     }
   }
 
@@ -89,21 +91,198 @@ export function Header() {
     (searchResults.posts?.length || 0) > 0
   )
 
+  // 1. Mobile Full-Width Search Header View
+  if (isMobileSearchVisible) {
+    return (
+      <div className="flex h-14 items-center gap-3 border-b border-border bg-background px-4 md:hidden w-full">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-9 w-9 p-0 flex-shrink-0 cursor-pointer hover:bg-accent transition-colors"
+          onClick={() => {
+            setIsMobileSearchVisible(false)
+            setSearchQuery('')
+          }}
+        >
+          <ArrowLeft className="h-5 w-5 text-foreground" />
+        </Button>
+        
+        <div className="flex-1 min-w-0" ref={searchRef}>
+          <form onSubmit={handleSearch} className="relative w-full">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+              <PopoverTrigger asChild>
+                <Input
+                  type="search"
+                  placeholder="Buscar en Lumora..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value)
+                    if (!isSearchOpen) setIsSearchOpen(true)
+                  }}
+                  onFocus={() => setIsSearchOpen(true)}
+                  autoComplete="off"
+                  autoFocus
+                  className="pl-10 pr-8 bg-muted/50 border-muted-foreground/20 focus:border-primary/50 w-full text-sm h-9"
+                />
+              </PopoverTrigger>
+              <PopoverContent className="w-[calc(100vw-32px)] p-0" align="start">
+                <Command>
+                  <CommandInput 
+                    placeholder="Escribe para buscar..." 
+                    value={searchQuery}
+                    onValueChange={setSearchQuery}
+                    className="hidden"
+                  />
+                  <CommandList>
+                    {!searchQuery && (
+                      <CommandEmpty>
+                        <div className="p-4 text-center text-xs text-muted-foreground">
+                          Escribe para buscar usuarios, espacios y posts
+                        </div>
+                      </CommandEmpty>
+                    )}
+                    
+                    {searchQuery && !hasResults && (
+                      <CommandEmpty>
+                        <div className="p-4 text-center text-xs text-muted-foreground">
+                          No se encontraron resultados para "{searchQuery}"
+                        </div>
+                      </CommandEmpty>
+                    )}
+
+                    {searchResults?.users && searchResults.users.length > 0 && (
+                      <CommandGroup heading="Usuarios">
+                        {searchResults.users.map((user) => (
+                          <CommandItem
+                            key={user.id}
+                            onSelect={() => {
+                              router.push(`/user/${user.username}`)
+                              setIsSearchOpen(false)
+                              setIsMobileSearchVisible(false)
+                            }}
+                            className="flex items-center gap-3 p-2.5 cursor-pointer hover:bg-accent/80 transition-colors"
+                          >
+                            <Avatar className="h-7 w-7">
+                              <AvatarImage src={user.avatar} />
+                              <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-xs truncate">{user.username}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{user.bio}</p>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    )}
+
+                    {searchResults?.spaces && searchResults.spaces.length > 0 && (
+                      <CommandGroup heading="Espacios">
+                        {searchResults.spaces.map((space) => (
+                          <CommandItem
+                            key={space.id}
+                            onSelect={() => {
+                              router.push(`/spaces/${space.id}`)
+                              setIsSearchOpen(false)
+                              setIsMobileSearchVisible(false)
+                            }}
+                            className="flex items-center gap-3 p-2.5 cursor-pointer hover:bg-accent/80 transition-colors"
+                          >
+                            <Avatar className="h-7 w-7">
+                              <AvatarImage src={space.image} />
+                              <AvatarFallback>{space.name.charAt(0).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-xs truncate">{space.name}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{space.description}</p>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    )}
+
+                    {searchResults?.posts && searchResults.posts.length > 0 && (
+                      <CommandGroup heading="Posts">
+                        {searchResults.posts.map((post) => (
+                          <CommandItem
+                            key={post.id}
+                            onSelect={() => {
+                              router.push(`/post/${post.id}`)
+                              setIsSearchOpen(false)
+                              setIsMobileSearchVisible(false)
+                            }}
+                            className="flex items-center gap-3 p-2.5 cursor-pointer hover:bg-accent/80 transition-colors"
+                          >
+                            <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
+                              <FileText className="h-3.5 w-3.5 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-xs truncate">
+                                {post.content.substring(0, 50)}...
+                              </p>
+                              <p className="text-[10px] text-muted-foreground truncate">
+                                por {post.author.username}
+                              </p>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    )}
+
+                    {hasResults && (
+                      <CommandGroup>
+                        <CommandItem
+                          onSelect={() => {
+                            router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
+                            setIsSearchOpen(false)
+                            setIsMobileSearchVisible(false)
+                          }}
+                          className="flex items-center gap-2 p-2.5 cursor-pointer hover:bg-accent/80 transition-colors text-xs"
+                        >
+                          <Search className="h-3.5 w-3.5" />
+                          <span>Ver todos los resultados para "{searchQuery}"</span>
+                        </CommandItem>
+                      </CommandGroup>
+                    )}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+
+            {searchQuery && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 cursor-pointer hover:bg-accent transition-colors"
+                onClick={() => setSearchQuery('')}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </form>
+        </div>
+      </div>
+    )
+  }
+
+  // 2. Normal / Desktop Header View
   return (
-    <div className="flex h-14 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
+    <div className="flex h-14 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 w-full">
       {/* Logo and Sidebar Trigger */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
         <SidebarTrigger />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 select-none">
           <LumoraLogo width={32} height={32} className="drop-shadow-sm" />
-          <h1 className="text-xl font-bold text-foreground">
+          <h1 className="text-xl font-bold text-foreground hidden sm:block">
             Lumora
           </h1>
         </div>
       </div>
 
-      {/* Enhanced Search */}
-      <div className="flex-1 max-w-md mx-8" ref={searchRef}>
+      {/* Desktop Search Bar (Hidden on Mobile) */}
+      <div className="hidden md:block flex-1 max-w-md mx-8" ref={searchRef}>
         <form onSubmit={handleSearch} className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
@@ -145,7 +324,7 @@ export function Header() {
                     </CommandEmpty>
                   )}
 
-                  {searchResults && searchResults.users && searchResults.users.length > 0 && (
+                  {searchResults?.users && searchResults.users.length > 0 && (
                     <CommandGroup heading="Usuarios">
                       {searchResults.users.map((user) => (
                         <CommandItem
@@ -169,7 +348,7 @@ export function Header() {
                     </CommandGroup>
                   )}
 
-                  {searchResults && searchResults.spaces && searchResults.spaces.length > 0 && (
+                  {searchResults?.spaces && searchResults.spaces.length > 0 && (
                     <CommandGroup heading="Espacios">
                       {searchResults.spaces.map((space) => (
                         <CommandItem
@@ -188,7 +367,7 @@ export function Header() {
                             <p className="font-medium text-sm truncate">{space.name}</p>
                             <p className="text-xs text-muted-foreground truncate">{space.description}</p>
                           </div>
-                          <Badge variant="secondary" className="text-xs">
+                          <Badge variant="secondary" className="text-xs flex-shrink-0">
                             {space.memberCount} miembros
                           </Badge>
                         </CommandItem>
@@ -196,7 +375,7 @@ export function Header() {
                     </CommandGroup>
                   )}
 
-                  {searchResults && searchResults.posts && searchResults.posts.length > 0 && (
+                  {searchResults?.posts && searchResults.posts.length > 0 && (
                     <CommandGroup heading="Posts">
                       {searchResults.posts.map((post) => (
                         <CommandItem
@@ -257,12 +436,27 @@ export function Header() {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+        {/* Search Icon Toggle (Visible only on Mobile) */}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setIsMobileSearchVisible(true)} 
+          className="md:hidden cursor-pointer hover:bg-accent transition-colors h-9 w-9 p-0 flex items-center justify-center"
+        >
+          <Search className="h-5 w-5 text-foreground" />
+        </Button>
+
         {/* Notifications */}
         <NotificationDropdown />
 
-        {/* Settings */}
-        <Button variant="ghost" size="sm" onClick={() => router.push('/settings')} className="cursor-pointer hover:bg-accent transition-colors">
+        {/* Settings (Hidden on Mobile, already accessible in Dropdown Menu) */}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => router.push('/settings')} 
+          className="hidden sm:inline-flex cursor-pointer hover:bg-accent transition-colors h-9 w-9 p-0 items-center justify-center"
+        >
           <Settings className="h-5 w-5" />
         </Button>
 

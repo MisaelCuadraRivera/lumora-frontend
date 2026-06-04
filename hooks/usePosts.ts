@@ -129,6 +129,8 @@ interface UsePostsOptions {
   userId?: string
   initialPage?: number
   pageSize?: number
+  autoFetch?: boolean
+  sortBy?: string
 }
 
 interface UsePostsReturn {
@@ -147,7 +149,7 @@ interface UsePostsReturn {
 }
 
 export function usePosts(options: UsePostsOptions = {}): UsePostsReturn {
-  const { spaceId, userId, initialPage = 1, pageSize = 20 } = options
+  const { spaceId, userId, initialPage = 1, pageSize = 20, autoFetch = true, sortBy } = options
   const { user } = useAuth()
   
   const [posts, setPosts] = useState<Post[]>([])
@@ -168,7 +170,7 @@ export function usePosts(options: UsePostsOptions = {}): UsePostsReturn {
       } else if (userId) {
         response = await apiService.getUserPosts(userId, pageNum, pageSize)
       } else {
-        response = await apiService.getFeed(pageNum, pageSize)
+        response = await apiService.getFeed(pageNum, pageSize, sortBy)
       }
 
       if (response.success && response.data) {
@@ -197,7 +199,7 @@ export function usePosts(options: UsePostsOptions = {}): UsePostsReturn {
     } finally {
       setLoading(false)
     }
-  }, [spaceId, userId, pageSize, user])
+  }, [spaceId, userId, pageSize, user, sortBy])
 
   const loadMore = useCallback(async () => {
     if (!loading && hasMore) {
@@ -327,10 +329,13 @@ export function usePosts(options: UsePostsOptions = {}): UsePostsReturn {
     }
   }, [])
 
-  // Cargar posts iniciales
+  // Cargar posts iniciales y resetear en cambio de orden
   useEffect(() => {
-    loadPosts(1, true)
-  }, [loadPosts])
+    setPage(1)
+    if (autoFetch) {
+      loadPosts(1, true)
+    }
+  }, [loadPosts, autoFetch, sortBy])
 
   return {
     posts,

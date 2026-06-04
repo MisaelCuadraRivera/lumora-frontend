@@ -49,13 +49,35 @@ import {
   UserPlus
 } from "lucide-react"
 import { useAuth } from "@/lib/auth"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Loader2 } from "lucide-react"
 
 export default function SettingsPage() {
-  const { user, refreshUser } = useAuth()
+  const { user, refreshUser, logout } = useAuth()
   const { toast } = useToast()
-  const [activeTab, setActiveTab] = useState("profile")
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  
+  // URL parameters as the single source of truth for tab state
+  const activeTab = searchParams.get("tab") || "profile"
+  
+  const handleTabChange = (value: string) => {
+    router.replace(`/settings?tab=${value}`, { scroll: false })
+  }
+
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  // Password form states
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+
+  // Account deletion states
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [confirmDeleteText, setConfirmDeleteText] = useState("")
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Profile settings
   const [profileData, setProfileData] = useState({
@@ -65,7 +87,7 @@ export default function SettingsPage() {
     avatar: user?.avatar || "",
   })
 
-  // Actualizar profileData cuando user cambie
+  // Actualizar profileData y preferencias cuando user cambie
   useEffect(() => {
     if (user) {
       setProfileData({
@@ -74,6 +96,44 @@ export default function SettingsPage() {
         bio: user.bio || "",
         avatar: user.avatar || "",
       })
+
+      // Sincronizar preferencias desde la base de datos si existen
+      if (user.preferences) {
+        if (user.preferences.notifications) {
+          setNotificationSettings(prev => ({
+            ...prev,
+            ...user.preferences.notifications
+          }))
+        }
+        if (user.preferences.privacy) {
+          setPrivacySettings(prev => ({
+            ...prev,
+            ...user.preferences.privacy
+          }))
+        }
+        if (user.preferences.appearance) {
+          setAppearanceSettings(prev => ({
+            ...prev,
+            ...user.preferences.appearance
+          }))
+
+          // Sincronizar tema de apariencia en el documento HTML
+          const theme = user.preferences.appearance.theme
+          const body = document.documentElement
+          if (theme === "dark") {
+            body.classList.add("dark")
+          } else if (theme === "light") {
+            body.classList.remove("dark")
+          } else if (theme === "auto") {
+            const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+            if (mediaQuery.matches) {
+              body.classList.add("dark")
+            } else {
+              body.classList.remove("dark")
+            }
+          }
+        }
+      }
     }
   }, [user])
 
@@ -108,6 +168,27 @@ export default function SettingsPage() {
     reduceMotion: false,
     highContrast: false,
   })
+
+  // Escuchar cambios de tema del sistema operativo (prefers-color-scheme) de manera reactiva
+  useEffect(() => {
+    if (appearanceSettings.theme !== "auto") return
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+    const handleThemeSystemChange = (e: MediaQueryListEvent) => {
+      const body = document.documentElement
+      if (e.matches) {
+        body.classList.add("dark")
+      } else {
+        body.classList.remove("dark")
+      }
+    }
+
+    mediaQuery.addEventListener("change", handleThemeSystemChange)
+
+    return () => {
+      mediaQuery.removeEventListener("change", handleThemeSystemChange)
+    }
+  }, [appearanceSettings.theme])
 
   const handleSaveProfile = async () => {
     try {
@@ -164,61 +245,195 @@ export default function SettingsPage() {
     }
   }
 
-  const handleChangePassword = () => {
-    // TODO: Implement password change
-    console.log("Changing password")
-    toast({
-      title: "Contraseña actualizada",
-      description: "Tu contraseña ha sido cambiada exitosamente.",
-      variant: "default",
-    })
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword) {
+      toast({
+        title: "Campos requeridos",
+        description: "Por favor completa todos los campos de contraseña.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (newPassword.length < 8) {
+      toast({
+        title: "Contraseña muy corta",
+        description: "La nueva contraseña debe tener al menos 8 caracteres.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setIsChangingPassword(true)
+    try {
+      const response = await apiService.changePassword(currentPassword, newPassword)
+      if (response.success) {
+        toast({
+          title: "Contraseña actualizada",
+          description: "Tu contraseña ha sido cambiada exitosamente.",
+          variant: "default",
+        })
+        setCurrentPassword("")
+        setNewPassword("")
+      } else {
+        throw new Error(response.message || "Error al cambiar la contraseña")
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar la contraseña. Inténtalo de nuevo.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsChangingPassword(false)
+    }
   }
 
-  const handleExportData = () => {
-    // TODO: Implement data export
-    console.log("Exporting data")
-    toast({
-      title: "Exportación iniciada",
-      description: "Recibirás un email con tus datos en los próximos minutos.",
-      variant: "default",
-    })
+  const handleExportData = async () => {
+    try {
+      const response = await apiService.exportUserData()
+      if (response.success) {
+        toast({
+          title: "Exportación iniciada",
+          description: "Recibirás un email con tus datos en los próximos minutos.",
+          variant: "default",
+        })
+      } else {
+        throw new Error(response.message || "Error al exportar datos")
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo iniciar la exportación de datos.",
+        variant: "destructive",
+      })
+    }
   }
 
-  const handleDeleteAccount = () => {
-    // TODO: Implement account deletion
-    console.log("Deleting account")
-    toast({
-      title: "Cuenta eliminada",
-      description: "Tu cuenta ha sido eliminada permanentemente.",
-      variant: "destructive",
-    })
+  const handleDeleteAccount = async () => {
+    if (confirmDeleteText !== "ELIMINAR") {
+      toast({
+        title: "Error de validación",
+        description: "Por favor escribe exactamente 'ELIMINAR' para confirmar.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      const response = await apiService.deleteAccount()
+      if (response.success) {
+        toast({
+          title: "Cuenta eliminada",
+          description: "Tu cuenta ha sido eliminada permanentemente.",
+          variant: "destructive",
+        })
+        setShowDeleteModal(false)
+        await logout()
+        router.push("/login")
+      } else {
+        throw new Error(response.message || "Error al eliminar la cuenta")
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo eliminar la cuenta. Inténtalo de nuevo.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
-  const handleNotificationSettingsChange = (key: string, value: boolean) => {
-    setNotificationSettings(prev => ({ ...prev, [key]: value }))
-    toast({
-      title: "Configuración actualizada",
-      description: "Tus preferencias de notificaciones han sido guardadas.",
-      variant: "default",
-    })
+  const handleNotificationSettingsChange = async (key: string, value: boolean) => {
+    const updated = { ...notificationSettings, [key]: value }
+    setNotificationSettings(updated)
+    
+    try {
+      const response = await apiService.updatePreferences({ notifications: updated })
+      if (response.success) {
+        toast({
+          title: "Configuración actualizada",
+          description: "Tus preferencias de notificaciones han sido guardadas.",
+          variant: "default",
+        })
+        await refreshUser()
+      } else {
+        throw new Error(response.message)
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo guardar la configuración en la base de datos.",
+        variant: "destructive"
+      })
+    }
   }
 
-  const handlePrivacySettingsChange = (key: string, value: string | boolean) => {
-    setPrivacySettings(prev => ({ ...prev, [key]: value }))
-    toast({
-      title: "Privacidad actualizada",
-      description: "Tus configuraciones de privacidad han sido guardadas.",
-      variant: "default",
-    })
+  const handlePrivacySettingsChange = async (key: string, value: string | boolean) => {
+    const updated = { ...privacySettings, [key]: value }
+    setPrivacySettings(updated)
+    
+    try {
+      const response = await apiService.updatePreferences({ privacy: updated })
+      if (response.success) {
+        toast({
+          title: "Privacidad actualizada",
+          description: "Tus configuraciones de privacidad han sido guardadas.",
+          variant: "default",
+        })
+        await refreshUser()
+      } else {
+        throw new Error(response.message)
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo guardar la configuración de privacidad.",
+        variant: "destructive"
+      })
+    }
   }
 
-  const handleAppearanceSettingsChange = (key: string, value: string | boolean) => {
-    setAppearanceSettings(prev => ({ ...prev, [key]: value }))
-    toast({
-      title: "Apariencia actualizada",
-      description: "Tus configuraciones de apariencia han sido guardadas.",
-      variant: "default",
-    })
+  const handleAppearanceSettingsChange = async (key: string, value: string | boolean) => {
+    const updated = { ...appearanceSettings, [key]: value }
+    setAppearanceSettings(updated)
+    
+    try {
+      const response = await apiService.updatePreferences({ appearance: updated })
+      if (response.success) {
+        if (key === "theme") {
+          const body = document.documentElement
+          if (value === "dark") {
+            body.classList.add("dark")
+          } else if (value === "light") {
+            body.classList.remove("dark")
+          } else if (value === "auto") {
+            const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+            if (mediaQuery.matches) {
+              body.classList.add("dark")
+            } else {
+              body.classList.remove("dark")
+            }
+          }
+        }
+        toast({
+          title: "Apariencia actualizada",
+          description: "Tus configuraciones de apariencia han sido guardadas.",
+          variant: "default",
+        })
+        await refreshUser()
+      } else {
+        throw new Error(response.message)
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo guardar la configuración de apariencia.",
+        variant: "destructive"
+      })
+    }
   }
 
   return (
@@ -226,7 +441,7 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-primary">
             Configuración
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -240,7 +455,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Settings Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="profile" className="gap-2">
             <User className="h-4 w-4" />
@@ -355,6 +570,8 @@ export default function SettingsPage() {
                       id="current-password"
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
                     />
                     <Button
                       type="button"
@@ -374,6 +591,8 @@ export default function SettingsPage() {
                       id="new-password"
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="••••••••"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
                     />
                     <Button
                       type="button"
@@ -388,9 +607,9 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="flex justify-end">
-                <Button variant="outline" onClick={handleChangePassword} className="gap-2">
-                  <Key className="h-4 w-4" />
-                  Cambiar Contraseña
+                <Button variant="outline" onClick={handleChangePassword} className="gap-2" disabled={isChangingPassword}>
+                  {isChangingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
+                  {isChangingPassword ? "Cambiando..." : "Cambiar Contraseña"}
                 </Button>
               </div>
             </CardContent>
@@ -722,7 +941,7 @@ export default function SettingsPage() {
                         <Button 
                           variant="destructive" 
                           size="sm"
-                          onClick={handleDeleteAccount}
+                          onClick={() => setShowDeleteModal(true)}
                           className="gap-2"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -737,6 +956,55 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Safety Validation Account Deletion Modal */}
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-destructive flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 animate-pulse" />
+              ¿Estás absolutamente seguro?
+            </DialogTitle>
+            <DialogDescription className="pt-2 text-sm leading-relaxed text-muted-foreground">
+              Esta acción es <strong>completamente irreversible</strong>. Se eliminará de forma permanente tu perfil, facetas, espacios, publicaciones y todos tus datos asociados.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-3">
+            <p className="text-xs text-muted-foreground">
+              Para confirmar la eliminación permanente, escribe exactamente <span className="font-bold text-foreground">ELIMINAR</span> a continuación:
+            </p>
+            <Input
+              value={confirmDeleteText}
+              onChange={(e) => setConfirmDeleteText(e.target.value)}
+              placeholder="Escribe 'ELIMINAR' para confirmar"
+              className="border-destructive/30 focus-visible:ring-destructive"
+            />
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowDeleteModal(false)
+                setConfirmDeleteText("")
+              }}
+              disabled={isDeleting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={confirmDeleteText !== "ELIMINAR" || isDeleting}
+              className="min-w-[120px]"
+            >
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+              {isDeleting ? "Eliminando..." : "Eliminar permanentemente"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

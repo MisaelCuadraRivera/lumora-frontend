@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FacetModal } from "./facet-modal"
 import { useAuth } from "@/lib/auth"
+import { useFacets } from "@/hooks/useFacets"
 import { 
   Plus, 
   Edit, 
@@ -28,20 +29,18 @@ import {
   Music,
   Code,
   BookOpen,
-  Sparkles
+  Sparkles,
+  Loader2
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 const facetTypes = [
-  { id: "personal", name: "Personal", icon: User, color: "bg-blue-500" },
-  { id: "professional", name: "Profesional", icon: Briefcase, color: "bg-green-500" },
-  { id: "creative", name: "Creativo", icon: Palette, color: "bg-purple-500" },
-  { id: "social", name: "Social", icon: Users, color: "bg-pink-500" },
-  { id: "fan", name: "Fan", icon: Heart, color: "bg-red-500" },
-  { id: "photographer", name: "Fotógrafo", icon: Camera, color: "bg-indigo-500" },
-  { id: "musician", name: "Músico", icon: Music, color: "bg-orange-500" },
-  { id: "developer", name: "Desarrollador", icon: Code, color: "bg-gray-500" },
-  { id: "writer", name: "Escritor", icon: BookOpen, color: "bg-teal-500" }
+  { id: "artista", name: "Artista", icon: Palette, color: "bg-purple-500" },
+  { id: "profesional", name: "Profesional", icon: Briefcase, color: "bg-blue-500" },
+  { id: "viajero", name: "Viajero", icon: Globe, color: "bg-green-500" },
+  { id: "gamer", name: "Gamer", icon: CheckCircle, color: "bg-red-500" },
+  { id: "escritor", name: "Escritor", icon: BookOpen, color: "bg-indigo-500" },
+  { id: "otro", name: "Otro", icon: Settings, color: "bg-gray-500" }
 ]
 
 const privacyIcons = {
@@ -52,8 +51,9 @@ const privacyIcons = {
 }
 
 export function FacetManager() {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const { toast } = useToast()
+  const { facets, loading, toggleFacet, deleteFacet, refreshFacets } = useFacets()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingFacet, setEditingFacet] = useState<any>(null)
   const [activeTab, setActiveTab] = useState("all")
@@ -62,36 +62,62 @@ export function FacetManager() {
     setEditingFacet(facet)
   }
 
-  const handleDeleteFacet = (facetId: string) => {
-    // Aquí iría la lógica para eliminar la faceta
-    toast({
-      title: "Faceta eliminada",
-      description: "La faceta ha sido eliminada exitosamente",
-    })
+  const handleDeleteFacet = async (facetId: string) => {
+    try {
+      const result = await deleteFacet(facetId)
+      if (result.success) {
+        toast({
+          title: "Faceta eliminada",
+          description: "La faceta ha sido eliminada exitosamente",
+        })
+        await refreshUser()
+      } else {
+        throw new Error(result.message || "Error al eliminar la faceta")
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo eliminar la faceta. Intenta de nuevo.",
+        variant: "destructive",
+      })
+    }
   }
 
-  const handleActivateFacet = (facetId: string) => {
-    // Aquí iría la lógica para activar la faceta
-    toast({
-      title: "Faceta activada",
-      description: "Has cambiado a esta faceta",
-    })
+  const handleActivateFacet = async (facetId: string) => {
+    try {
+      const result = await toggleFacet(facetId)
+      if (result.success) {
+        toast({
+          title: "Faceta activada",
+          description: "Has cambiado a esta faceta",
+        })
+        await refreshUser()
+      } else {
+        throw new Error(result.message || "Error al cambiar el estado de la faceta")
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo cambiar el estado de la faceta.",
+        variant: "destructive",
+      })
+    }
   }
 
-  const filteredFacets = user?.facets?.filter(facet => {
+  const filteredFacets = (facets || []).filter(facet => {
     if (activeTab === "all") return true
     if (activeTab === "active") return facet.isActive
     if (activeTab === "public") return facet.privacy === "public"
     if (activeTab === "private") return facet.privacy === "private"
     return true
-  }) || []
+  })
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold text-primary">
             Mis Facetas
           </h2>
           <p className="text-muted-foreground mt-1">
@@ -100,7 +126,7 @@ export function FacetManager() {
         </div>
         <Button 
           onClick={() => setShowCreateModal(true)}
-          className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           <Plus className="w-4 h-4 mr-2" />
           Nueva Faceta
@@ -116,7 +142,7 @@ export function FacetManager() {
                 <User className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{user?.facets?.length || 0}</p>
+                <p className="text-2xl font-bold">{facets?.length || 0}</p>
                 <p className="text-sm text-muted-foreground">Total de facetas</p>
               </div>
             </div>
@@ -131,7 +157,7 @@ export function FacetManager() {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {user?.facets?.filter(f => f.isActive).length || 0}
+                  {facets?.filter(f => f.isActive).length || 0}
                 </p>
                 <p className="text-sm text-muted-foreground">Faceta activa</p>
               </div>
@@ -147,7 +173,7 @@ export function FacetManager() {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {user?.facets?.filter(f => f.privacy === "public").length || 0}
+                  {facets?.filter(f => f.privacy === "public").length || 0}
                 </p>
                 <p className="text-sm text-muted-foreground">Públicas</p>
               </div>
@@ -163,7 +189,7 @@ export function FacetManager() {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {user?.facets?.filter(f => f.privacy === "private").length || 0}
+                  {facets?.filter(f => f.privacy === "private").length || 0}
                 </p>
                 <p className="text-sm text-muted-foreground">Privadas</p>
               </div>
@@ -188,7 +214,11 @@ export function FacetManager() {
             </TabsList>
 
             <TabsContent value={activeTab} className="mt-6">
-              {filteredFacets.length === 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : filteredFacets.length === 0 ? (
                 <div className="text-center py-12">
                   <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No hay facetas</h3>
@@ -208,7 +238,7 @@ export function FacetManager() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredFacets.map((facet) => {
-                    const facetType = facetTypes.find(t => t.id === facet.type)
+                    const facetType = facetTypes.find(t => t.id === facet.type || t.id === facet.category)
                     const PrivacyIcon = privacyIcons[facet.privacy as keyof typeof privacyIcons] || Globe
 
                     return (
@@ -299,6 +329,7 @@ export function FacetManager() {
         isOpen={showCreateModal} 
         onClose={() => setShowCreateModal(false)}
         mode="create"
+        onSuccess={refreshFacets}
       />
       
       <FacetModal 
@@ -306,6 +337,7 @@ export function FacetManager() {
         onClose={() => setEditingFacet(null)}
         mode="edit"
         facet={editingFacet}
+        onSuccess={refreshFacets}
       />
     </div>
   )
